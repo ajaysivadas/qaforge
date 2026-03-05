@@ -1,0 +1,35 @@
+{
+  "name": "qa-pilot",
+  "version": "1.0.0",
+  "description": "QA-specific meta-prompting and workflow system for Claude Code. Context-engineered slash commands for test planning, scaffolding, bug investigation, regression analysis, and more.",
+  "main": "bin/install.js",
+  "bin": {
+    "qa-pilot": "bin/install.js"
+  },
+  "scripts": {
+    "install-commands": "node bin/install.js",
+    "scan": "node scripts/scan-project.js",
+    "postinstall": "node bin/install.js --auto"
+  },
+  "keywords": [
+    "qa",
+    "testing",
+    "automation",
+    "claude-code",
+    "test-planning",
+    "test-generation",
+    "appium",
+    "testng",
+    "pytest",
+    "allure"
+  ],
+  "author": "Fundfolio QA",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

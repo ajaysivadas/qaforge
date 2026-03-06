@@ -7,11 +7,16 @@ const os = require("os");
 const VERSION = "1.0.0";
 const PACKAGE_ROOT = path.resolve(__dirname, "..");
 
-// ── Target directories ──────────────────────────────────────────────────────
-const CLAUDE_GLOBAL = path.join(os.homedir(), ".claude");
-const CLAUDE_LOCAL = path.join(process.cwd(), ".claude");
+// ── Path constants ───────────────────────────────────────────────────────
+const CLAUDE_DIR = ".claude";
+const COMMANDS_DIR = path.join("commands", "qa");
+const KNOWLEDGE_DIR = "qaforge-knowledge";
+const CONTEXT_FILE = "qaforge-context.md";
 
-// ── Colors ──────────────────────────────────────────────────────────────────
+const CLAUDE_GLOBAL = path.join(os.homedir(), CLAUDE_DIR);
+const CLAUDE_LOCAL = path.join(process.cwd(), CLAUDE_DIR);
+
+// ── Colors ───────────────────────────────────────────────────────────────
 const c = {
   reset: "\x1b[0m",
   bold: "\x1b[1m",
@@ -23,8 +28,15 @@ const c = {
   magenta: "\x1b[35m",
 };
 
+// ── Verbose logging ──────────────────────────────────────────────────────
+let verbose = false;
+
 function log(msg) {
   console.log(msg);
+}
+
+function debug(msg) {
+  if (verbose) log(`${c.dim}  [debug] ${msg}${c.reset}`);
 }
 
 function banner() {
@@ -44,12 +56,26 @@ function banner() {
   log("");
 }
 
-// ── File operations ─────────────────────────────────────────────────────────
+// ── Command descriptions (single source of truth) ────────────────────────
+const COMMANDS = [
+  { name: "test-plan", short: "Test strategy from features/PRs", desc: "Generate a comprehensive test plan from a feature, PR, or user story" },
+  { name: "test-cases", short: "Detailed test case generation", desc: "Produce structured positive, negative, edge, and boundary test cases" },
+  { name: "api-scaffold", short: "Full API test code scaffolding", desc: "Scaffold API test suite with executors, POJOs, test classes, and suite XML" },
+  { name: "app-scaffold", short: "Mobile app test scaffolding", desc: "Scaffold mobile tests with screen objects and UI test flows (Appium/Selenide)" },
+  { name: "bug-investigate", short: "Root cause analysis", desc: "Investigate failures using logs, Allure reports, or stack traces" },
+  { name: "regression-plan", short: "Impact-based regression plan", desc: "Analyze code changes to build a prioritized regression test plan" },
+  { name: "test-data", short: "Test data generation", desc: "Generate test data for JSON payloads, DataProviders, DB fixtures, and CSV" },
+  { name: "flaky-detect", short: "Flaky test detection", desc: "Detect flaky tests and classify them across 10 failure patterns" },
+  { name: "coverage-gap", short: "Coverage gap analysis", desc: "Find untested areas by comparing tests against endpoints or requirements" },
+];
+
+// ── File operations ──────────────────────────────────────────────────────
 
 function ensureDir(dirPath) {
   try {
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true });
+      debug(`Created directory: ${dirPath}`);
     }
   } catch (err) {
     log(`${c.red}  ERROR: Cannot create directory ${dirPath}${c.reset}`);
@@ -76,11 +102,44 @@ function copyDir(src, dest) {
     } else {
       try {
         fs.copyFileSync(srcPath, destPath);
+        debug(`Copied: ${entry.name}`);
       } catch (err) {
-        log(`${c.yellow}  [WARN] Failed to copy ${entry.name}: ${err.message}${c.reset}`);
+        log(
+          `${c.yellow}  [WARN] Failed to copy ${entry.name}: ${err.message}${c.reset}`
+        );
       }
     }
   }
+}
+
+function removeDir(dirPath) {
+  try {
+    if (fs.existsSync(dirPath)) {
+      fs.rmSync(dirPath, { recursive: true, force: true });
+      debug(`Removed: ${dirPath}`);
+      return true;
+    }
+  } catch (err) {
+    log(
+      `${c.yellow}  [WARN] Could not remove ${dirPath}: ${err.message}${c.reset}`
+    );
+  }
+  return false;
+}
+
+function removeFile(filePath) {
+  try {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      debug(`Removed: ${filePath}`);
+      return true;
+    }
+  } catch (err) {
+    log(
+      `${c.yellow}  [WARN] Could not remove ${filePath}: ${err.message}${c.reset}`
+    );
+  }
+  return false;
 }
 
 function countFiles(dir, ext) {
@@ -103,10 +162,31 @@ function countFiles(dir, ext) {
   return count;
 }
 
+function listFiles(dir, ext) {
+  const files = [];
+  if (!fs.existsSync(dir)) return files;
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch (err) {
+    return files;
+  }
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...listFiles(fullPath, ext));
+    } else if (entry.name.endsWith(ext)) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
 function safeWriteFile(filePath, content) {
   try {
     ensureDir(path.dirname(filePath));
     fs.writeFileSync(filePath, content);
+    debug(`Wrote: ${filePath}`);
     return true;
   } catch (err) {
     log(`${c.red}  ERROR: Cannot write ${filePath}${c.reset}`);
@@ -115,48 +195,261 @@ function safeWriteFile(filePath, content) {
   }
 }
 
-// ── Install commands ────────────────────────────────────────────────────────
+// ── Install to a target ──────────────────────────────────────────────────
 
-function installCommands(targetBase, label) {
+function installTo(targetBase, label, { withScan = false } = {}) {
+  log(`${c.cyan}  Installing to ${label} ...${c.reset}`);
+
+  // Install commands
   const commandsSrc = path.join(PACKAGE_ROOT, "commands", "qa");
-  const commandsDest = path.join(targetBase, "commands", "qa");
+  const commandsDest = path.join(targetBase, COMMANDS_DIR);
 
   if (!fs.existsSync(commandsSrc)) {
-    log(`${c.red}  ERROR: Commands source not found at ${commandsSrc}${c.reset}`);
-    return 0;
+    log(
+      `${c.red}  ERROR: Commands source not found at ${commandsSrc}${c.reset}`
+    );
+    return false;
   }
 
   ensureDir(commandsDest);
   copyDir(commandsSrc, commandsDest);
-
-  const count = countFiles(commandsDest, ".md");
+  const cmdCount = countFiles(commandsDest, ".md");
   log(
-    `${c.green}  [OK]${c.reset} Installed ${c.bold}${count} commands${c.reset} to ${label}`
+    `${c.green}  [OK]${c.reset} Installed ${c.bold}${cmdCount} commands${c.reset} to ${label}${COMMANDS_DIR}/`
   );
-  return count;
-}
 
-// ── Install knowledge base ──────────────────────────────────────────────────
-
-function installKnowledge(targetBase, label) {
+  // Install knowledge
   const knowledgeSrc = path.join(PACKAGE_ROOT, "knowledge");
-  const knowledgeDest = path.join(targetBase, "qaforge-knowledge");
+  const knowledgeDest = path.join(targetBase, KNOWLEDGE_DIR);
 
   if (!fs.existsSync(knowledgeSrc)) {
     log(`${c.yellow}  [SKIP]${c.reset} Knowledge base not found`);
+  } else {
+    ensureDir(knowledgeDest);
+    copyDir(knowledgeSrc, knowledgeDest);
+    const kbCount = countFiles(knowledgeDest, ".md");
+    log(
+      `${c.green}  [OK]${c.reset} Installed ${c.bold}${kbCount} knowledge files${c.reset} to ${label}${KNOWLEDGE_DIR}/`
+    );
+  }
+
+  // Scan if requested
+  if (withScan) {
+    log(`\n${c.cyan}  Scanning project for context...${c.reset}`);
+    const context = scanAndGenerateContext();
+    const outPath = path.join(targetBase, CONTEXT_FILE);
+    if (safeWriteFile(outPath, context)) {
+      log(
+        `${c.green}  [OK]${c.reset} Project context saved to ${label}${CONTEXT_FILE}`
+      );
+    }
+  }
+
+  return true;
+}
+
+// ── Uninstall ────────────────────────────────────────────────────────────
+
+function uninstall() {
+  banner();
+  log(`${c.cyan}  Uninstalling QA Forge...${c.reset}`);
+  log("");
+
+  let removed = 0;
+
+  // Global
+  const globalCmds = path.join(CLAUDE_GLOBAL, COMMANDS_DIR);
+  const globalKb = path.join(CLAUDE_GLOBAL, KNOWLEDGE_DIR);
+  if (removeDir(globalCmds)) {
+    log(`${c.green}  [OK]${c.reset} Removed global commands (~/.claude/${COMMANDS_DIR}/)`);
+    removed++;
+  }
+  if (removeDir(globalKb)) {
+    log(`${c.green}  [OK]${c.reset} Removed global knowledge (~/.claude/${KNOWLEDGE_DIR}/)`);
+    removed++;
+  }
+
+  // Local
+  const localCmds = path.join(CLAUDE_LOCAL, COMMANDS_DIR);
+  const localKb = path.join(CLAUDE_LOCAL, KNOWLEDGE_DIR);
+  const localCtx = path.join(CLAUDE_LOCAL, CONTEXT_FILE);
+  if (removeDir(localCmds)) {
+    log(`${c.green}  [OK]${c.reset} Removed local commands (.claude/${COMMANDS_DIR}/)`);
+    removed++;
+  }
+  if (removeDir(localKb)) {
+    log(`${c.green}  [OK]${c.reset} Removed local knowledge (.claude/${KNOWLEDGE_DIR}/)`);
+    removed++;
+  }
+  if (removeFile(localCtx)) {
+    log(`${c.green}  [OK]${c.reset} Removed local context (.claude/${CONTEXT_FILE})`);
+    removed++;
+  }
+
+  log("");
+  if (removed === 0) {
+    log(`${c.dim}  Nothing to remove — QA Forge is not installed.${c.reset}`);
+  } else {
+    log(`${c.green}${c.bold}  Uninstall complete.${c.reset} Removed ${removed} item(s).`);
+  }
+  log("");
+}
+
+// ── Verify installation ──────────────────────────────────────────────────
+
+function verify() {
+  banner();
+  log(`${c.cyan}  Verifying QA Forge installation...${c.reset}`);
+  log("");
+
+  let issues = 0;
+
+  // Check global
+  const globalCmds = path.join(CLAUDE_GLOBAL, COMMANDS_DIR);
+  const globalKb = path.join(CLAUDE_GLOBAL, KNOWLEDGE_DIR);
+
+  log(`${c.bold}  Global (~/.claude/)${c.reset}`);
+  if (fs.existsSync(globalCmds)) {
+    const count = countFiles(globalCmds, ".md");
+    const expected = COMMANDS.length;
+    if (count === expected) {
+      log(`${c.green}    [OK]${c.reset} Commands: ${count}/${expected}`);
+    } else {
+      log(`${c.yellow}    [!!]${c.reset} Commands: ${count}/${expected} (missing ${expected - count})`);
+      issues++;
+    }
+  } else {
+    log(`${c.dim}    [--]${c.reset} Commands: not installed`);
+  }
+
+  if (fs.existsSync(globalKb)) {
+    const count = countFiles(globalKb, ".md");
+    log(`${c.green}    [OK]${c.reset} Knowledge files: ${count}`);
+  } else {
+    log(`${c.dim}    [--]${c.reset} Knowledge: not installed`);
+  }
+
+  // Check local
+  const localCmds = path.join(CLAUDE_LOCAL, COMMANDS_DIR);
+  const localKb = path.join(CLAUDE_LOCAL, KNOWLEDGE_DIR);
+  const localCtx = path.join(CLAUDE_LOCAL, CONTEXT_FILE);
+
+  log("");
+  log(`${c.bold}  Local (.claude/)${c.reset}`);
+  if (fs.existsSync(localCmds)) {
+    const count = countFiles(localCmds, ".md");
+    log(`${c.green}    [OK]${c.reset} Commands: ${count}`);
+  } else {
+    log(`${c.dim}    [--]${c.reset} Commands: not installed`);
+  }
+  if (fs.existsSync(localKb)) {
+    const count = countFiles(localKb, ".md");
+    log(`${c.green}    [OK]${c.reset} Knowledge files: ${count}`);
+  } else {
+    log(`${c.dim}    [--]${c.reset} Knowledge: not installed`);
+  }
+  if (fs.existsSync(localCtx)) {
+    log(`${c.green}    [OK]${c.reset} Project context: found`);
+  } else {
+    log(`${c.dim}    [--]${c.reset} Project context: not generated (run --scan)`);
+  }
+
+  // Verify individual command files
+  log("");
+  log(`${c.bold}  Command files:${c.reset}`);
+  const searchDir = fs.existsSync(globalCmds) ? globalCmds : localCmds;
+  if (fs.existsSync(searchDir)) {
+    for (const cmd of COMMANDS) {
+      const filePath = path.join(searchDir, `${cmd.name}.md`);
+      if (fs.existsSync(filePath)) {
+        log(`${c.green}    [OK]${c.reset} /qa:${cmd.name}`);
+      } else {
+        log(`${c.red}    [!!]${c.reset} /qa:${cmd.name} — MISSING`);
+        issues++;
+      }
+    }
+  } else {
+    log(`${c.dim}    No commands directory found.${c.reset}`);
+  }
+
+  log("");
+  if (issues === 0) {
+    log(`${c.green}${c.bold}  Verification passed.${c.reset}`);
+  } else {
+    log(`${c.yellow}${c.bold}  Found ${issues} issue(s).${c.reset} Run ${c.bold}npx qaforge --global${c.reset} to reinstall.`);
+  }
+  log("");
+}
+
+// ── List installed files ─────────────────────────────────────────────────
+
+function listInstalled() {
+  banner();
+
+  const globalCmds = path.join(CLAUDE_GLOBAL, COMMANDS_DIR);
+  const globalKb = path.join(CLAUDE_GLOBAL, KNOWLEDGE_DIR);
+  const localCmds = path.join(CLAUDE_LOCAL, COMMANDS_DIR);
+  const localKb = path.join(CLAUDE_LOCAL, KNOWLEDGE_DIR);
+  const localCtx = path.join(CLAUDE_LOCAL, CONTEXT_FILE);
+
+  // Determine where commands are installed
+  const cmdDir = fs.existsSync(globalCmds)
+    ? globalCmds
+    : fs.existsSync(localCmds)
+    ? localCmds
+    : null;
+  const kbDir = fs.existsSync(globalKb)
+    ? globalKb
+    : fs.existsSync(localKb)
+    ? localKb
+    : null;
+
+  if (!cmdDir && !kbDir) {
+    log(
+      `${c.yellow}  QA Forge is not installed.${c.reset} Run ${c.bold}npx qaforge${c.reset} to install.`
+    );
+    log("");
     return;
   }
 
-  ensureDir(knowledgeDest);
-  copyDir(knowledgeSrc, knowledgeDest);
+  log(`${c.bold}  Installed Commands:${c.reset}`);
+  log(`${c.dim}  ──────────────────────────────────────────────────────────────${c.reset}`);
+  if (cmdDir) {
+    for (const cmd of COMMANDS) {
+      const filePath = path.join(cmdDir, `${cmd.name}.md`);
+      const status = fs.existsSync(filePath) ? c.green + "●" : c.red + "○";
+      log(`  ${status}${c.reset} /qa:${cmd.name.padEnd(18)} ${c.dim}${cmd.desc}${c.reset}`);
+    }
+  } else {
+    log(`${c.dim}  No commands installed.${c.reset}`);
+  }
 
-  const count = countFiles(knowledgeDest, ".md");
-  log(
-    `${c.green}  [OK]${c.reset} Installed ${c.bold}${count} knowledge files${c.reset} to ${label}`
-  );
+  log("");
+  log(`${c.bold}  Knowledge Base:${c.reset}`);
+  log(`${c.dim}  ──────────────────────────────────────────────────────────────${c.reset}`);
+  if (kbDir) {
+    const kbFiles = listFiles(kbDir, ".md");
+    for (const f of kbFiles) {
+      const rel = path.relative(kbDir, f);
+      log(`  ${c.green}●${c.reset} ${rel}`);
+    }
+  } else {
+    log(`${c.dim}  No knowledge files installed.${c.reset}`);
+  }
+
+  log("");
+  log(`${c.bold}  Project Context:${c.reset}`);
+  log(`${c.dim}  ──────────────────────────────────────────────────────────────${c.reset}`);
+  if (fs.existsSync(localCtx)) {
+    log(`  ${c.green}●${c.reset} .claude/${CONTEXT_FILE}`);
+  } else {
+    log(`  ${c.dim}○ Not generated — run ${c.bold}npx qaforge --scan${c.reset}`);
+  }
+
+  log("");
 }
 
-// ── Scan project and generate context ───────────────────────────────────────
+// ── Scan project and generate context ────────────────────────────────────
 
 function scanAndGenerateContext() {
   const cwd = process.cwd();
@@ -170,16 +463,16 @@ function scanAndGenerateContext() {
 
   // Detect framework
   const hasPom = fs.existsSync(path.join(cwd, "pom.xml"));
-  const hasRequirements = fs.existsSync(
-    path.join(cwd, "requirements.txt")
-  );
-  const hasPytest = fs.existsSync(path.join(cwd, "pytest.ini"));
-  const hasPackageJson = fs.existsSync(path.join(cwd, "package.json"));
   const hasGradle = fs.existsSync(path.join(cwd, "build.gradle"));
+  const hasRequirements = fs.existsSync(path.join(cwd, "requirements.txt"));
+  const hasPyproject = fs.existsSync(path.join(cwd, "pyproject.toml"));
+  const hasPytest = fs.existsSync(path.join(cwd, "pytest.ini"));
+  const hasSetupPy = fs.existsSync(path.join(cwd, "setup.py"));
+  const hasPackageJson = fs.existsSync(path.join(cwd, "package.json"));
 
   if (hasPom) {
     context.push("## Framework: Java/Maven");
-    // Check for TestNG
+    debug("Detected pom.xml");
     try {
       const pom = fs.readFileSync(path.join(cwd, "pom.xml"), "utf8");
       if (pom.includes("testng")) context.push("- Test Runner: TestNG");
@@ -188,6 +481,7 @@ function scanAndGenerateContext() {
       if (pom.includes("appium")) context.push("- Mobile: Appium");
       if (pom.includes("selenide")) context.push("- UI Helper: Selenide");
       if (pom.includes("allure")) context.push("- Reporting: Allure");
+      if (pom.includes("junit")) context.push("- Test Runner: JUnit");
 
       // Extract profiles — only <id> tags inside <profile> blocks
       const profileBlockRegex = /<profile>\s*<id>([^<]+)<\/id>/g;
@@ -201,29 +495,53 @@ function scanAndGenerateContext() {
         profiles.forEach((p) => context.push(`- ${p}`));
       }
     } catch (e) {
-      /* ignore read errors */
+      debug(`Failed to parse pom.xml: ${e.message}`);
     }
   }
 
-  if (hasRequirements || hasPytest) {
-    context.push("## Framework: Python/pytest");
+  if (hasGradle) {
+    context.push("## Framework: Java/Gradle");
+    debug("Detected build.gradle");
     try {
-      const reqs = fs.readFileSync(
-        path.join(cwd, "requirements.txt"),
-        "utf8"
-      );
-      if (reqs.includes("pytest")) context.push("- Test Runner: pytest");
-      if (reqs.includes("allure")) context.push("- Reporting: Allure");
-      if (reqs.includes("google-cloud"))
-        context.push("- Cloud: Google Cloud");
-      if (reqs.includes("redis")) context.push("- Cache: Redis");
+      const gradle = fs.readFileSync(path.join(cwd, "build.gradle"), "utf8");
+      if (gradle.includes("testng")) context.push("- Test Runner: TestNG");
+      if (gradle.includes("rest-assured"))
+        context.push("- HTTP Client: RestAssured");
+      if (gradle.includes("junit")) context.push("- Test Runner: JUnit");
+      if (gradle.includes("allure")) context.push("- Reporting: Allure");
     } catch (e) {
-      /* ignore */
+      debug(`Failed to parse build.gradle: ${e.message}`);
+    }
+  }
+
+  if (hasRequirements || hasPytest || hasPyproject || hasSetupPy) {
+    context.push("## Framework: Python");
+    debug("Detected Python project");
+    try {
+      const reqs = hasRequirements
+        ? fs.readFileSync(path.join(cwd, "requirements.txt"), "utf8")
+        : "";
+      const pyproject = hasPyproject
+        ? fs.readFileSync(path.join(cwd, "pyproject.toml"), "utf8")
+        : "";
+      const combined = reqs + "\n" + pyproject;
+
+      if (combined.includes("pytest") || hasPytest)
+        context.push("- Test Runner: pytest");
+      if (combined.includes("allure")) context.push("- Reporting: Allure");
+      if (combined.includes("google-cloud"))
+        context.push("- Cloud: Google Cloud");
+      if (combined.includes("redis")) context.push("- Cache: Redis");
+      if (combined.includes("requests")) context.push("- HTTP Client: requests");
+      if (combined.includes("httpx")) context.push("- HTTP Client: httpx");
+    } catch (e) {
+      debug(`Failed to parse Python config: ${e.message}`);
     }
   }
 
   if (hasPackageJson) {
     context.push("## Framework: Node.js");
+    debug("Detected package.json");
     try {
       const pkg = JSON.parse(
         fs.readFileSync(path.join(cwd, "package.json"), "utf8")
@@ -234,16 +552,19 @@ function scanAndGenerateContext() {
       };
       if (deps.mocha) context.push("- Test Runner: Mocha");
       if (deps.jest) context.push("- Test Runner: Jest");
-      if (deps.playwright) context.push("- Browser: Playwright");
+      if (deps["@playwright/test"] || deps.playwright)
+        context.push("- Browser: Playwright");
       if (deps.cypress) context.push("- Browser: Cypress");
+      if (deps.supertest) context.push("- HTTP Testing: Supertest");
+      if (deps.vitest) context.push("- Test Runner: Vitest");
     } catch (e) {
-      /* ignore */
+      debug(`Failed to parse package.json: ${e.message}`);
     }
   }
 
   // Count test files
   context.push("\n## Test Inventory");
-  const testDirs = ["src/test", "tests", "test", "spec"];
+  const testDirs = ["src/test", "tests", "test", "spec", "__tests__"];
   for (const dir of testDirs) {
     const fullDir = path.join(cwd, dir);
     if (fs.existsSync(fullDir)) {
@@ -283,15 +604,44 @@ function scanAndGenerateContext() {
   return context.join("\n");
 }
 
-// ── Main ────────────────────────────────────────────────────────────────────
+// ── Print command summary ────────────────────────────────────────────────
+
+function printCommandSummary() {
+  log("");
+  log(`${c.green}${c.bold}  Installation complete!${c.reset}`);
+  log("");
+  log(`${c.bold}  Available commands in Claude Code:${c.reset}`);
+  log(
+    `${c.dim}  ──────────────────────────────────────${c.reset}`
+  );
+  for (const cmd of COMMANDS) {
+    const pad = ".".repeat(Math.max(1, 22 - cmd.name.length));
+    log(`  /qa:${cmd.name} ${c.dim}${pad}${c.reset} ${cmd.short}`);
+  }
+  log(
+    `${c.dim}  ──────────────────────────────────────${c.reset}`
+  );
+  log("");
+  log(
+    `${c.dim}  Tip: Run 'npx qaforge --scan' inside any project to generate context.${c.reset}`
+  );
+  log("");
+}
+
+// ── Main ─────────────────────────────────────────────────────────────────
 
 function main() {
   const args = process.argv.slice(2);
+  verbose = args.includes("--verbose");
+
   const isLocal = args.includes("--local");
   const isGlobal = args.includes("--global");
   const isScan = args.includes("--scan");
   const isHelp = args.includes("--help") || args.includes("-h");
   const isVersion = args.includes("--version") || args.includes("-v");
+  const isUninstall = args.includes("--uninstall");
+  const isVerify = args.includes("--verify");
+  const isList = args.includes("--list");
 
   if (isVersion) {
     log(`qaforge v${VERSION}`);
@@ -301,26 +651,39 @@ function main() {
   if (isHelp) {
     banner();
     log(`${c.bold}  Usage:${c.reset}`);
-    log(`    npx qaforge              Interactive install`);
+    log(`    npx qaforge              Install globally + scan current project`);
     log(`    npx qaforge --global     Install to ~/.claude/ (all projects)`);
-    log(`    npx qaforge --local      Install to ./.claude/ (this project)`);
+    log(`    npx qaforge --local      Install to ./.claude/ (this project only)`);
     log(
       `    npx qaforge --scan       Scan project and generate context file`
     );
+    log(`    npx qaforge --list       Show installed commands and knowledge`);
+    log(`    npx qaforge --verify     Check installation integrity`);
+    log(`    npx qaforge --uninstall  Remove QA Forge from ~/.claude/ and ./.claude/`);
+    log(`    npx qaforge --verbose    Show detailed debug output`);
     log(`    npx qaforge --help       Show this help`);
     log(`    npx qaforge --version    Show version`);
     log("");
-    log(`${c.bold}  Installed Commands:${c.reset}`);
-    log(`    /qa:test-plan          Generate test strategy`);
-    log(`    /qa:test-cases         Generate detailed test cases`);
-    log(`    /qa:api-scaffold       Scaffold API test suite`);
-    log(`    /qa:app-scaffold       Scaffold mobile app tests`);
-    log(`    /qa:bug-investigate    Root cause analysis`);
-    log(`    /qa:regression-plan    Impact-based regression plan`);
-    log(`    /qa:test-data          Generate test data`);
-    log(`    /qa:flaky-detect       Detect flaky tests`);
-    log(`    /qa:coverage-gap       Find coverage gaps`);
+    log(`${c.bold}  Commands:${c.reset}`);
+    for (const cmd of COMMANDS) {
+      log(`    /qa:${cmd.name.padEnd(18)} ${c.dim}${cmd.desc}${c.reset}`);
+    }
     log("");
+    process.exit(0);
+  }
+
+  if (isUninstall) {
+    uninstall();
+    process.exit(0);
+  }
+
+  if (isVerify) {
+    verify();
+    process.exit(0);
+  }
+
+  if (isList) {
+    listInstalled();
     process.exit(0);
   }
 
@@ -330,10 +693,10 @@ function main() {
   if (isScan) {
     log(`${c.cyan}  Scanning project...${c.reset}`);
     const context = scanAndGenerateContext();
-    const outPath = path.join(process.cwd(), ".claude", "qaforge-context.md");
+    const outPath = path.join(process.cwd(), CLAUDE_DIR, CONTEXT_FILE);
     if (safeWriteFile(outPath, context)) {
       log(
-        `${c.green}  [OK]${c.reset} Project context written to ${c.bold}.claude/qaforge-context.md${c.reset}`
+        `${c.green}  [OK]${c.reset} Project context written to ${c.bold}.claude/${CONTEXT_FILE}${c.reset}`
       );
       log(
         `${c.dim}  This file helps QA Forge commands understand your project.${c.reset}`
@@ -344,73 +707,25 @@ function main() {
   }
 
   // Install mode
-  let installed = false;
-
   if (isGlobal) {
-    log(`${c.cyan}  Installing globally to ~/.claude/ ...${c.reset}`);
-    installCommands(CLAUDE_GLOBAL, "~/.claude/commands/qa/");
-    installKnowledge(CLAUDE_GLOBAL, "~/.claude/qaforge-knowledge/");
-    installed = true;
-  }
-
-  if (isLocal) {
-    log(`${c.cyan}  Installing locally to ./.claude/ ...${c.reset}`);
-    installCommands(CLAUDE_LOCAL, ".claude/commands/qa/");
-    installKnowledge(CLAUDE_LOCAL, ".claude/qaforge-knowledge/");
-
-    // Also scan the project
-    log(`\n${c.cyan}  Scanning project for context...${c.reset}`);
-    const context = scanAndGenerateContext();
-    const outPath = path.join(CLAUDE_LOCAL, "qaforge-context.md");
-    if (safeWriteFile(outPath, context)) {
-      log(
-        `${c.green}  [OK]${c.reset} Project context written to ${c.bold}.claude/qaforge-context.md${c.reset}`
-      );
-    }
-    installed = true;
-  }
-
-  if (!isGlobal && !isLocal) {
+    installTo(CLAUDE_GLOBAL, "~/.claude/");
+    printCommandSummary();
+  } else if (isLocal) {
+    installTo(CLAUDE_LOCAL, ".claude/", { withScan: true });
+    printCommandSummary();
+  } else {
     // Default: install globally + scan current project
-    log(`${c.cyan}  Installing globally to ~/.claude/ ...${c.reset}`);
-    installCommands(CLAUDE_GLOBAL, "~/.claude/commands/qa/");
-    installKnowledge(CLAUDE_GLOBAL, "~/.claude/qaforge-knowledge/");
+    installTo(CLAUDE_GLOBAL, "~/.claude/");
     log("");
-
     log(`${c.cyan}  Scanning current project...${c.reset}`);
     const context = scanAndGenerateContext();
-    const outPath = path.join(CLAUDE_LOCAL, "qaforge-context.md");
+    const outPath = path.join(CLAUDE_LOCAL, CONTEXT_FILE);
     if (safeWriteFile(outPath, context)) {
       log(
-        `${c.green}  [OK]${c.reset} Project context saved to .claude/qaforge-context.md`
+        `${c.green}  [OK]${c.reset} Project context saved to .claude/${CONTEXT_FILE}`
       );
     }
-    installed = true;
-  }
-
-  if (installed) {
-    log("");
-    log(
-      `${c.green}${c.bold}  Installation complete!${c.reset}`
-    );
-    log("");
-    log(`${c.bold}  Available commands in Claude Code:${c.reset}`);
-    log(`${c.dim}  ──────────────────────────────────────${c.reset}`);
-    log(`  /qa:test-plan ${c.dim}........${c.reset} Test strategy from features/PRs`);
-    log(`  /qa:test-cases ${c.dim}.......${c.reset} Detailed test case generation`);
-    log(`  /qa:api-scaffold ${c.dim}.....${c.reset} Full API test code scaffolding`);
-    log(`  /qa:app-scaffold ${c.dim}.....${c.reset} Mobile app test scaffolding`);
-    log(`  /qa:bug-investigate ${c.dim}..${c.reset} Root cause analysis`);
-    log(`  /qa:regression-plan ${c.dim}..${c.reset} Impact-based regression plan`);
-    log(`  /qa:test-data ${c.dim}........${c.reset} Test data generation`);
-    log(`  /qa:flaky-detect ${c.dim}.....${c.reset} Flaky test detection`);
-    log(`  /qa:coverage-gap ${c.dim}.....${c.reset} Coverage gap analysis`);
-    log(`${c.dim}  ──────────────────────────────────────${c.reset}`);
-    log("");
-    log(
-      `${c.dim}  Tip: Run 'npx qaforge --scan' inside any project to generate context.${c.reset}`
-    );
-    log("");
+    printCommandSummary();
   }
 }
 

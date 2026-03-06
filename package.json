@@ -1,10 +1,10 @@
 {
-  "name": "qa-pilot",
+  "name": "qaforge",
   "version": "1.0.0",
-  "description": "QA-specific meta-prompting and workflow system for Claude Code. Context-engineered slash commands for test planning, scaffolding, bug investigation, regression analysis, and more.",
+  "description": "Context-engineered QA workflows for Claude Code — test plans, scaffolding, bug investigation, and more from a single /qa command.",
   "main": "bin/install.js",
   "bin": {
-    "qa-pilot": "bin/install.js"
+    "qaforge": "bin/install.js"
   },
   "scripts": {
     "install-commands": "node bin/install.js",
@@ -23,11 +23,11 @@
     "pytest",
     "allure"
   ],
-  "author": "Fundfolio QA",
+  "author": "Ajay Sivadas",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/ajaysivadas/qaforge.git"
   },
   "engines": {
     "node": ">=16.0.0"

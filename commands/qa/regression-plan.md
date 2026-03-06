@@ -19,8 +19,8 @@ If no argument is provided, ask the user for:
 ## Knowledge Base
 
 Read before generating:
-- `~/.claude/qa-pilot-knowledge/standards/coverage-criteria.md` — priority definitions, coverage targets
-- `~/.claude/qa-pilot-knowledge/standards/test-structure.md` — test categorization (smoke, regression, integration)
+- `~/.claude/qaforge-knowledge/standards/coverage-criteria.md` — priority definitions, coverage targets
+- `~/.claude/qaforge-knowledge/standards/test-structure.md` — test categorization (smoke, regression, integration)
 
 ## Instructions
 
@@ -33,21 +33,22 @@ gh pr diff <PR_NUMBER> --name-only
 
 **If release scope described**, map to affected services.
 
-### Step 2: Map Impact Using Service Dependency Graph
+### Step 2: Map Impact Using Service Dependencies
 
-```
-TAP -> TWS -> TMS, User PnL
-TAP -> Signal Accuracy, Mobile API, Bundle, TMS, TIS
-TIS -> Signal Accuracy, TMS
-Bundle -> TWS, TIS
-Mobile API -> TAP
-Quant Pipeline -> BigQuery, Firestore, Redis, PubSub
-SMD -> Backtest, Indicators, Options Data
-```
+Analyze the project's architecture to understand service dependencies. Look for:
+- Direct dependencies (service A calls service B)
+- Data dependencies (shared databases, caches, message queues)
+- Configuration dependencies (shared config, feature flags)
+
+If the project has a CLAUDE.md with a dependency graph, use it. Otherwise, infer from the codebase.
 
 ### Step 3: Find Existing Test Suites
 
-Search the project for test suites covering impacted areas.
+Search the project for test suites covering impacted areas:
+- TestNG suite XMLs in `test-suite/`
+- Maven profiles in `pom.xml`
+- pytest test modules in `tests/`
+- Playwright test specs
 
 ### Step 4: Prioritize into Tiers
 

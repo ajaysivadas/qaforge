@@ -1,6 +1,6 @@
 # Command Reference
 
-QA Pilot provides 9 slash commands, each designed for a specific QA workflow. All commands are invoked in Claude Code by typing `/qa:<command-name>`.
+QA Forge provides 9 slash commands, each designed for a specific QA workflow. All commands are invoked in Claude Code by typing `/qa:<command-name>`.
 
 ## Command Overview
 
@@ -19,7 +19,7 @@ QA Pilot provides 9 slash commands, each designed for a specific QA workflow. Al
 |---------|----------|
 | [/qa:api-scaffold](api-scaffold.md) | You need to create API test classes, executors, POJOs, and suite XML |
 | [/qa:app-scaffold](app-scaffold.md) | You need to create mobile screen objects, test classes, and suite XML |
-| [/qa:test-data](test-data.md) | You need test data in any format (JSON, DataProvider, Firestore, Redis, CSV) |
+| [/qa:test-data](test-data.md) | You need test data in any format (JSON, DataProvider, DB fixtures, cache, CSV) |
 
 ### Investigation & Detection
 
@@ -56,12 +56,12 @@ QA Pilot provides 9 slash commands, each designed for a specific QA workflow. Al
 All commands accept `$ARGUMENTS` — free-text input after the command name. Examples:
 
 ```
-/qa:test-plan TAP order placement with chasing limit
-/qa:api-scaffold POST /v1/trade-ideas with payload {strategyType, strikes}
-/qa:bug-investigate java.lang.AssertionError: expected 200 but got 500 in TIS
+/qa:test-plan user registration with email verification
+/qa:api-scaffold POST /v1/orders with payload {productId, quantity, price}
+/qa:bug-investigate java.lang.AssertionError: expected 200 but got 500
 /qa:regression-plan https://github.com/org/repo/pull/42
-/qa:coverage-gap TAP service
-/qa:flaky-detect http://34.47.166.104:7474/allure-docker-service-ui/projects/tap-stage
+/qa:coverage-gap orders service
+/qa:flaky-detect checkout regression suite - last 20 runs
 ```
 
 If you don't provide arguments, each command will ask you for the required inputs interactively.

@@ -19,11 +19,11 @@ If no argument is provided, ask the user for:
 ## Knowledge Base
 
 Read these knowledge files before generating:
-- `~/.claude/qa-pilot-knowledge/standards/test-naming.md` — naming conventions
-- `~/.claude/qa-pilot-knowledge/standards/coverage-criteria.md` — what to cover
-- `~/.claude/qa-pilot-knowledge/patterns/api-testing.md` — request validation matrix
+- `~/.claude/qaforge-knowledge/standards/test-naming.md` — naming conventions
+- `~/.claude/qaforge-knowledge/standards/coverage-criteria.md` — what to cover
+- `~/.claude/qaforge-knowledge/patterns/api-testing.md` — request validation matrix
 
-Also check project context: `.claude/qa-pilot-context.md`
+Also check project context: `.claude/qaforge-context.md`
 
 ## Instructions
 
@@ -38,7 +38,7 @@ Break down the input into:
 ### Step 2: Detect Framework
 
 Check current directory for framework (pom.xml, requirements.txt, package.json).
-Read the matching framework knowledge file from `~/.claude/qa-pilot-knowledge/frameworks/`.
+Read the matching framework knowledge file from `~/.claude/qaforge-knowledge/frameworks/`.
 
 ### Step 3: Generate Test Cases
 

@@ -5,9 +5,6 @@
 ```python
 import pytest
 import allure
-from src.managers.firestore_manager import FirestoreManager
-from src.managers.redis_manager import RedisManager
-from src.utils.config_reader import ConfigReader
 
 @allure.epic("Service Name")
 @allure.feature("Feature Name")
@@ -38,22 +35,20 @@ class TestFeatureName:
 
 ## Component vs Manager Pattern
 
-- **Components** (`src/components/`): Singleton GCP service clients
-  - BigQueryComponent, FirestoreComponent, RedisComponent, PubSubComponent, CloudStorageComponent
+- **Components** (`src/components/`): Singleton service clients (database, cache, cloud, message queue)
   - Handle client initialization and authentication only
   - NEVER use components directly in tests
 
-- **Managers** (`src/managers/`): Business logic wrappers
-  - FirestoreManager, RedisManager, BigQueryManager, PubSubManager, StorageManager
+- **Managers** (`src/managers/`): Business logic wrappers around components
   - Use managers in tests for all data operations
 
 ```python
 # CORRECT
-from src.managers.firestore_manager import FirestoreManager
-docs = FirestoreManager.get_documents_by_field(collection, field, value)
+from src.managers.db_manager import DbManager
+docs = DbManager.get_documents_by_field(collection, field, value)
 
 # WRONG — never use components directly
-from src.components.firestore_component import FirestoreComponent
+from src.components.db_component import DbComponent
 ```
 
 ## Fixture Patterns
@@ -62,88 +57,42 @@ from src.components.firestore_component import FirestoreComponent
 # conftest.py
 
 @pytest.fixture(scope="session")
-def ensure_vm_running_before_session():
-    """Start GCE VM before test session, stop after."""
-    start_vm()
+def ensure_service_running():
+    """Start required service before test session, stop after."""
+    start_service()
     yield
-    stop_vm()
+    stop_service()
 
 @pytest.fixture(scope="session")
-def clear_redis_before_session():
-    """Clean Redis state before running tests."""
-    RedisManager.flush_keys(pattern="test:*")
+def clear_cache_before_session():
+    """Clean cache state before running tests."""
+    CacheManager.flush_keys(pattern="test:*")
     yield
 
 @pytest.fixture(scope="module")
-def setup_signals():
-    """Prepare signal generation test environment."""
-    cp_update()
-    restart_container()
+def setup_test_data():
+    """Prepare test environment for the module."""
+    update_config()
+    restart_service()
     data = DataPreparation.prepare_data()
     yield data
 
 @pytest.fixture(scope="function")
-def setup_backtestdata():
-    """Set up backtest comparison data per test."""
-    data = fetch_backtest_data()
+def setup_comparison_data():
+    """Set up comparison data per test."""
+    data = fetch_comparison_data()
     yield data
-    cleanup_backtest_data()
+    cleanup_comparison_data()
 
 # Custom CLI options
 def pytest_addoption(parser):
     parser.addoption("--variant_id", action="store", default=None)
     parser.addoption("--start_date", action="store", default=None)
-    parser.addoption("--expiry_date", action="store", default=None)
     parser.addoption("--query_date", action="store", default=None)
-    parser.addoption("--index_type", action="store", default=None)
 
 @pytest.fixture
 def variant_id(request):
     return request.config.getoption("--variant_id")
-```
-
-## Signal Generation Test Flow
-
-```python
-def test_signal_generation(setup_signals):
-    """
-    1. cp_update() — update control parameters in Firestore
-    2. restart_container() — reset signal generation container
-    3. DataPreparation.prepare_data() — fetch test data
-    4. publish_bundle_smd_event() — publish SMD events via PubSub
-    5. Verify signals in Firestore and state in Redis
-    6. Assert strikes, entry prices, pending decisions
-    """
-    data = setup_signals
-    publish_bundle_smd_event(data.topic, data.payload)
-    signals = FirestoreManager.get_documents_by_field(
-        collection, "variant_id", data.variant_id
-    )
-    assert len(signals) > 0, "No signals generated"
-    assert signals[0]["strike"] == data.expected_strike
-```
-
-## Backtest Test Flow
-
-```python
-def test_backtest_comparison(setup_backtestdata):
-    """Compare actual trades from Firestore against expected CSV from Cloud Storage."""
-    actual = FirestoreManager.get_backtest_trades(variant_id)
-    expected = StorageManager.download_csv(bucket, path)
-    comparison = compare_trades(actual, expected)
-    assert comparison.mismatches == 0, f"Found {comparison.mismatches} mismatches"
-```
-
-## SMD Observability Test Flow
-
-```python
-@pytest.mark.parametrize("index", ["NIFTY", "SENSEX"])
-def test_smd_vs_backtest(query_date, index):
-    """Compare SMD OHLC against backtest data."""
-    smd_data = BigQueryManager.query_smd(index, query_date)
-    bt_data = BigQueryManager.query_backtest(index, query_date)
-    differences = compare_ohlc(smd_data, bt_data)
-    assert len(differences) == 0, format_differences(differences)
 ```
 
 ## Configuration
@@ -153,9 +102,8 @@ def test_smd_vs_backtest(query_date, index):
 from src.utils.config_reader import ConfigReader
 
 project_id = ConfigReader.get_project_id()
-bucket = ConfigReader.get_backtest_qa_cloudbucket_name()
-redis_uri = ConfigReader.get_redis_uri()
-report_link = ConfigReader.get_allure_report_link("smd-observability")
+bucket = ConfigReader.get_storage_bucket_name()
+cache_uri = ConfigReader.get_cache_uri()
 ```
 
 ## Allure Integration
@@ -164,7 +112,7 @@ report_link = ConfigReader.get_allure_report_link("smd-observability")
 import allure
 
 # Step-level logging
-with allure.step("Publish SMD event"):
+with allure.step("Publish event to message queue"):
     publish_event(topic, payload)
 
 # Attach data to report
@@ -172,20 +120,14 @@ allure.attach(json.dumps(data, indent=2), "Response Data", allure.attachment_typ
 
 # HTML formatted tables in reports
 allure.attach(html_table, "Comparison Results", allure.attachment_type.HTML)
-
-# Use allure_formatter.py constants for styling
-from src.utils.allure_formatter import STATUS_SUCCESS, STATUS_ERROR, BG_SUCCESS
 ```
 
-## Project Structure
+## Typical Project Structure
 
 ```
 src/
-├── components/          # Singleton GCP service clients
+├── components/          # Singleton service clients
 ├── managers/            # Business logic wrappers
-├── signalGeneration/    # Signal validation logic
-├── backtest/            # Backtest comparison utilities
-├── mds/                 # Market data service utilities
 ├── scripts/             # CI helper scripts
 └── utils/
     ├── config_reader.py
@@ -193,18 +135,18 @@ src/
     └── assertions.py
 
 tests/
-├── backtest/            # Backtest comparison tests
-├── signalGeneration/    # Signal generation tests
-├── holidayObservability/ # Holiday sync tests
-├── smdObservability/    # SMD data validation tests
-└── conftest.py          # Shared fixtures
+├── conftest.py          # Global fixtures
+├── <feature>/
+│   ├── conftest.py      # Feature fixtures
+│   └── test_*.py        # Test modules
+└── fixtures/            # Shared test data files
 ```
 
 ## Running Tests
 
 ```bash
 pytest tests/                                    # All tests
-pytest tests/backtest/test_trades_comparison.py  # Specific module
+pytest tests/feature/test_specific.py            # Specific module
 pytest tests/ --alluredir=allure-results         # With Allure
-pytest tests/smdObservability/ --query_date=2024-01-15 --index_type=NIFTY
+pytest tests/feature/ --query_date=2024-01-15    # With custom params
 ```

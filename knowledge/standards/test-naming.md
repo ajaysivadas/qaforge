@@ -9,7 +9,7 @@ verify_<Expected>_<Behavior>_<Context>
 
 Examples:
 - `verify_Status_Code_Should_Be_200`
-- `verify_Response_Contains_Trade_Id`
+- `verify_Response_Contains_Order_Id`
 - `verify_Error_Message_For_Invalid_Payload`
 - `verify_Login_Screen_Is_Displayed`
 - `verify_User_Can_Navigate_To_Dashboard`
@@ -27,7 +27,7 @@ Rules:
 ```
 
 Examples:
-- `CreateCorrectStrategy`
+- `CreateOrderTest`
 - `PlaceOrderWithValidPayload`
 - `LoginScreenTest`
 - `DashboardNavigationTest`
@@ -37,9 +37,9 @@ Examples:
 <ServiceName>Executor
 ```
 Method names: `camelCase` describing the API action
-- `createTradeIdea(payload)`
+- `createOrder(payload)`
 - `getOrderById(orderId)`
-- `deletePosition(positionId)`
+- `deleteResource(resourceId)`
 
 ### Screen Classes (Page Objects)
 ```
@@ -55,17 +55,17 @@ testng-<Feature>.xml
 testng-<Service>-<Scenario>.xml
 ```
 - `testng-Login.xml`
-- `testng-Tap-Stage-Regression.xml`
+- `testng-Orders-Regression.xml`
 
 ### Maven Profiles
 ```
 <Service>-<Environment>-<Scope>
 ```
-- `Tap-Stage-Regression`
-- `Tis-Stage`
-- `Bundle`
+- `Orders-Stage-Regression`
+- `Users-Stage`
+- `Payments-Prod`
 
-## Python pytest (Quant Research)
+## Python pytest
 
 ### Test Functions
 ```python
@@ -73,48 +73,45 @@ def test_<what>_<condition>():
 ```
 
 Examples:
-- `test_signal_generation_produces_correct_strike`
-- `test_backtest_trades_match_expected_csv`
-- `test_smd_ohlc_matches_backtest_data`
-- `test_invalid_variant_id_raises_error`
+- `test_order_creation_returns_correct_id`
+- `test_data_comparison_matches_expected_csv`
+- `test_invalid_input_raises_error`
 
 ### Test Classes
 ```python
 class Test<Feature>:
 ```
-- `TestSignalGeneration`
-- `TestBacktestComparison`
-- `TestSmdObservability`
+- `TestOrderCreation`
+- `TestDataComparison`
+- `TestUserAuthentication`
 
 ### Fixtures
 ```python
 def setup_<what>():
 def <what>_fixture():
 ```
-- `setup_signals`
-- `setup_backtestdata`
-- `clear_redis_before_session`
-- `ensure_vm_running_before_session`
+- `setup_test_data`
+- `setup_comparison_data`
+- `clear_cache_before_session`
 
 ### Test Files
 ```
 test_<feature>.py
 test_<what>_<action>.py
 ```
-- `test_bundle.py`
-- `test_trades_comparison.py`
-- `test_index_comparison.py`
+- `test_orders.py`
+- `test_data_comparison.py`
 
 ## Allure Annotations
 
 ### Epic (Service Level)
-- `TAP`, `TIS`, `TMS`, `TWS`, `Bundle`, `Quant`, `SMD`, `UserPnl`
+- `Orders`, `Users`, `Payments`, `Authentication`, `Dashboard`
 
 ### Feature (Feature Level)
-- `Order Placement`, `Signal Generation`, `Trade Monitoring`, `Backtest Validation`
+- `Order Placement`, `User Registration`, `Data Validation`
 
 ### Story (Scenario Level)
-- `Valid order with market price`, `Signal for NIFTY iron condor`
+- `Valid order with default settings`, `User login with MFA`
 
 ### Severity Mapping
 | Level | When to Use |
@@ -132,5 +129,3 @@ ver/<description>    # Major version changes
 feat/<description>   # New features (minor version)
 bugfix/<description> # Bug fixes (patch version)
 ```
-
-Enforced by GitHub Actions in all repositories.

@@ -18,32 +18,30 @@ If no argument is provided, ask the user for:
 ## Knowledge Base
 
 **MUST READ** — this is critical for accurate classification:
-- `~/.claude/qa-pilot-knowledge/patterns/flaky-test-patterns.md` — all 10 flaky patterns with detection heuristics and fixes
+- `~/.claude/qaforge-knowledge/patterns/flaky-test-patterns.md` — all 10 flaky patterns with detection heuristics and fixes
 
 ## Instructions
 
 ### Step 1: Gather Test History
 
-**From Allure:** Authenticate and fetch report data with retries info.
-```bash
-curl -s -c /tmp/allure-cookies.txt \
-  -H "Content-Type: application/json" \
-  -d '{"username":"viewer","password":"Mfeed@2023"}' \
-  "http://<host>:5051/allure-docker-service/login" > /dev/null
-```
+**From Allure report (if URL provided):**
+If the project has an Allure Docker Service, authenticate and fetch report data. Check the project's CLAUDE.md or config for Allure credentials and API endpoint.
 
 **From GitHub Actions:**
 ```bash
 gh run list --limit 20 --json databaseId,conclusion,startedTime
 ```
 
+**From GitLab CI or other CI:**
+Check for CI config files and use appropriate CLI tools.
+
 ### Step 2: Identify Flaky Tests
 
 Using the detection heuristics from the knowledge base:
 - Pass rate 60-95% across runs
 - Different error messages across failures
-- Passes on retry
-- No code change correlates
+- Passes on retry without code changes
+- No code change correlates with failure onset
 
 ### Step 3: Classify Root Cause
 

@@ -20,7 +20,7 @@ If no argument is provided, ask the user for:
 ## Knowledge Base
 
 Read before generating:
-- `~/.claude/qa-pilot-knowledge/patterns/data-validation.md` — data validation patterns, tolerance handling
+- `~/.claude/qaforge-knowledge/patterns/data-validation.md` — data validation patterns, tolerance handling
 - The relevant framework file — to match data provider patterns
 
 ## Instructions

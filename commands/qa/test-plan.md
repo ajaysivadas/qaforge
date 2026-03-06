@@ -19,13 +19,13 @@ If no argument is provided, ask the user for:
 ## Knowledge Base
 
 Before generating the plan, read the following knowledge files if they exist:
-- `~/.claude/qa-pilot-knowledge/standards/coverage-criteria.md` — coverage levels and checklists
-- `~/.claude/qa-pilot-knowledge/patterns/api-testing.md` — API test design patterns
-- `~/.claude/qa-pilot-knowledge/patterns/mobile-testing.md` — mobile test patterns
-- `~/.claude/qa-pilot-knowledge/patterns/data-validation.md` — data pipeline patterns
+- `~/.claude/qaforge-knowledge/standards/coverage-criteria.md` — coverage levels and checklists
+- `~/.claude/qaforge-knowledge/patterns/api-testing.md` — API test design patterns
+- `~/.claude/qaforge-knowledge/patterns/mobile-testing.md` — mobile test patterns
+- `~/.claude/qaforge-knowledge/patterns/data-validation.md` — data pipeline patterns
 
 Also check for project context:
-- `.claude/qa-pilot-context.md` — auto-generated project context
+- `.claude/qaforge-context.md` — auto-generated project context
 
 ## Instructions
 
@@ -53,7 +53,7 @@ Check the current directory for:
 - `package.json` -> Node.js (check for Mocha, Jest, Playwright, Cypress)
 - `build.gradle` -> Gradle
 
-Read the relevant framework knowledge file from `~/.claude/qa-pilot-knowledge/frameworks/` to understand the test structure and conventions.
+Read the relevant framework knowledge file from `~/.claude/qaforge-knowledge/frameworks/` to understand the test structure and conventions.
 
 ### Step 3: Analyze Existing Test Coverage
 

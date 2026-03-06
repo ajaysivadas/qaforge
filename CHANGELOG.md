@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to QA Pilot will be documented in this file.
+All notable changes to QA Forge will be documented in this file.
 
 ## [1.0.0] - 2026-03-05
 
@@ -13,7 +13,7 @@ All notable changes to QA Pilot will be documented in this file.
 - `/qa:app-scaffold` — Scaffold mobile app tests (screen objects, test class, TestNG suite XML)
 - `/qa:bug-investigate` — Root cause analysis from failures, logs, or stack traces
 - `/qa:regression-plan` — Impact-based regression plan from code changes
-- `/qa:test-data` — Generate test data (JSON, DataProviders, Firestore, Redis, CSV, BigQuery)
+- `/qa:test-data` — Generate test data (JSON, DataProviders, DB fixtures, cache, CSV)
 - `/qa:flaky-detect` — Detect flaky tests, classify against 10 known patterns, suggest fixes
 - `/qa:coverage-gap` — Find untested endpoints, screens, and missing test scenarios
 
@@ -23,12 +23,12 @@ All notable changes to QA Pilot will be documented in this file.
 - **Standards**: Test naming conventions, test structure rules, coverage criteria checklists
 
 #### CLI
-- `npx qa-pilot` — Interactive install (global + project scan)
-- `npx qa-pilot --global` — Install to ~/.claude/
-- `npx qa-pilot --local` — Install to ./.claude/ with project scan
-- `npx qa-pilot --scan` — Scan project and generate context file
-- `npx qa-pilot --help` — Show usage
-- `npx qa-pilot --version` — Show version
+- `npx qaforge` — Interactive install (global + project scan)
+- `npx qaforge --global` — Install to ~/.claude/
+- `npx qaforge --local` — Install to ./.claude/ with project scan
+- `npx qaforge --scan` — Scan project and generate context file
+- `npx qaforge --help` — Show usage
+- `npx qaforge --version` — Show version
 
 #### Project Scanner
 - Auto-detects: Maven/TestNG, pytest, Node.js frameworks

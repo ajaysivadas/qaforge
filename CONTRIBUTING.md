@@ -1,8 +1,8 @@
-# Contributing to QA Pilot
+# Contributing to QA Forge
 
 ## Overview
 
-QA Pilot has three extensible layers:
+QA Forge has three extensible layers:
 1. **Commands** — slash command prompts in `commands/qa/`
 2. **Knowledge Base** — curated QA expertise in `knowledge/`
 3. **CLI** — installer and scanner in `bin/` and `scripts/`
@@ -38,16 +38,13 @@ If no argument is provided, ask the user for:
 ## Knowledge Base
 
 **MUST READ** before executing:
-- `~/.claude/qa-pilot-knowledge/<category>/<file>.md`
+- `~/.claude/qaforge-knowledge/<category>/<file>.md`
 
-Also check: `.claude/qa-pilot-context.md`
+Also check: `.claude/qaforge-context.md`
 
 ## Instructions
 
 ### Step 1: <Action>
-<What Claude should do>
-
-### Step 2: <Action>
 <What Claude should do>
 
 ### Step N: Save Output
@@ -65,9 +62,7 @@ Write to `doc/<category>/<name>-<YYYY-MM-DD>.md`. Report file path.
 ### 4. Test the command
 
 ```bash
-# Reinstall
 node bin/install.js --global
-
 # Open Claude Code and test
 /qa:your-command <test input>
 ```
@@ -77,38 +72,17 @@ node bin/install.js --global
 ### Adding a new framework
 
 Create `knowledge/frameworks/<framework>.md` with:
-
-```markdown
-# <Framework> Knowledge
-
-## Test Class Structure
-<Complete code example>
-
-## Key Rules
-1. <Rule>
-2. <Rule>
-
-## Package Structure
-<Directory tree>
-
-## Common Patterns
-<Code examples>
-```
-
-Then update relevant commands to reference the new file.
+- Complete code examples for test classes
+- Key rules (numbered, non-negotiable)
+- Package/directory structure
+- Common patterns
 
 ### Adding a new pattern
 
 Create `knowledge/patterns/<pattern>.md` with:
-
-```markdown
-# <Pattern> Patterns
-
-## <Pattern Name>
-**When to use**: <scenario>
-**How to implement**: <code example>
-**Anti-patterns**: <what not to do>
-```
+- What to test (checklists, matrices)
+- How to implement (code examples)
+- Anti-patterns (what not to do)
 
 ### Adding a new standard
 
@@ -116,21 +90,11 @@ Create `knowledge/standards/<standard>.md` with checklists, naming rules, or cov
 
 ## Improving the Scanner
 
-The scanner in `bin/install.js` (`scanAndGenerateContext()`) auto-detects project characteristics. To add detection for a new framework:
+The scanner in `bin/install.js` auto-detects project characteristics. To add detection for a new framework:
 
-1. Add file existence check (e.g., `has<Framework>`)
+1. Add file existence check
 2. Parse the build file for dependencies
 3. Add relevant metadata to the context output
-
-## Modifying the CLI
-
-The CLI (`bin/install.js`) is intentionally simple — no external dependencies, pure Node.js. Keep it that way.
-
-Key functions:
-- `installCommands()` — copies command .md files
-- `installKnowledge()` — copies knowledge .md files
-- `scanAndGenerateContext()` — generates project context
-- `main()` — argument parsing and orchestration
 
 ## Publishing Updates
 
@@ -142,7 +106,7 @@ npm publish
 
 Users update with:
 ```bash
-npx qa-pilot@latest --global
+npx qaforge@latest --global
 ```
 
 ## Code Style

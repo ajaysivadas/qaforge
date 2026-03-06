@@ -11,42 +11,25 @@ Investigate test failures or bugs using logs, Allure reports, error messages, or
 ## Examples
 
 ```
-/qa:bug-investigate NoHttpResponseException in TAP regression suite
-/qa:bug-investigate java.lang.AssertionError: expected 200 but got 500 in CreatingIronCondor
-/qa:bug-investigate http://34.47.166.104:7474/allure-docker-service-ui/projects/tap-stage
+/qa:bug-investigate TimeoutException in checkout regression suite
+/qa:bug-investigate java.lang.AssertionError: expected 200 but got 500 in CreateOrderTest
 /qa:bug-investigate StaleElementReferenceException in LoginScreenTest on iOS
-/qa:bug-investigate Signal generation test failing - no signals in Firestore after PubSub publish
+/qa:bug-investigate Data comparison test failing - no records found after pipeline run
+/qa:bug-investigate https://allure.example.com/projects/orders-stage
 ```
 
 ## What It Does
 
 1. **Collects evidence** — reads stack traces, fetches Allure reports, reads log files
 2. **Classifies the failure** into one of 6 categories:
-   - Test Bug — wrong expected value, stale test data
-   - Product Bug — unexpected behavior, business logic violation
-   - Environment Issue — service unavailable, DNS failure
-   - Data Issue — missing/expired test data
-   - Flaky Test — intermittent, timing-dependent
-   - Infrastructure — OOM, pod restart, deployment in progress
-3. **Checks against known patterns** specific to the Marketfeed ecosystem:
-   - `NoHttpResponseException` — service overloaded (5 retries built-in)
-   - `PreRequisiteValidator` failure — Redis option chain or GCP services down
-   - `System.exit(0)` — pre-req check killed the suite
-   - Element staleness, BigQuery timeouts, Redis state issues, PubSub mismatches
-4. **Traces root cause** through the code — reads the failing test, its dependencies, executors
+   - Test Bug, Product Bug, Environment Issue, Data Issue, Flaky Test, Infrastructure
+3. **Checks against 10 known flaky patterns** from the knowledge base
+4. **Traces root cause** through the code
 5. **Generates an investigation report** with root cause, evidence, and resolution steps
 
 ## Output
 
 Saved to `doc/bug-reports/<name>-<YYYY-MM-DD>.md`
-
-Report includes:
-- Failure summary and category
-- Root cause analysis
-- Evidence (code snippets, response bodies, log excerpts)
-- Immediate fix
-- Long-term fix to prevent recurrence
-- Code changes checklist
 
 ## Tips
 

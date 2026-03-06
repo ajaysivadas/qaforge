@@ -81,7 +81,7 @@ Each provides 10-15 overloaded methods supporting: BaseUri, EndPoint, Object bod
 ## Endpoint Pattern
 
 ```java
-// EndPoint enum uses ThreadLocal for path params
+// EndPoint enum uses ThreadLocal for path params (thread-safe parallel execution)
 EndPoint.SomeEndpoint.addPathParam(id)  // Returns EndPoint for chaining
 EndPoint.SomeEndpoint.getResource()      // Resolves thread-specific path
 ```
@@ -106,11 +106,11 @@ Every assertion integrates with Allure and attaches actual/expected values on fa
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 <suite name="Suite Name" parallel="classes" thread-count="5">
     <listeners>
-        <listener class-name="MarketFeed.Api_Test.Reports.Listeners.ServiceListener"/>
+        <listener class-name="com.yourorg.Reports.Listeners.ServiceListener"/>
     </listeners>
     <test name="Test Name">
         <classes>
-            <class name="MarketFeed.Api_Test.ServiceName.Feature.TestClass"/>
+            <class name="com.yourorg.ServiceName.Feature.TestClass"/>
         </classes>
     </test>
 </suite>
@@ -127,13 +127,6 @@ Every assertion integrates with Allure and attaches actual/expected values on fa
 </profile>
 ```
 
-## Pre-Requisite Validation
-
-Listeners run on `onStart(ISuite)` -> PreRequisiteValidator:
-1. Checks Redis for valid future expiry option chain data
-2. Verifies GCP App Engine services are SERVING
-3. On failure: Discord alert + System.exit(0)
-
 ## Common Severity Mappings
 
 - `BLOCKER`: Status code assertions, authentication, critical business logic
@@ -141,17 +134,16 @@ Listeners run on `onStart(ISuite)` -> PreRequisiteValidator:
 - `NORMAL`: Response format, optional fields, metadata
 - `MINOR`: Logging, headers, non-functional checks
 
-## Package Structure
+## Typical Package Structure
 
 ```
-src/main/java/MarketFeed/Api_Test/
+src/main/java/com/yourorg/
 ├── ApiExecutors/<Service>/     # API call methods
 ├── Assertions/                 # Custom assertion methods
 ├── Base/
 │   ├── HttpRequests/           # HTTP method chain + auth
 │   ├── URI/                    # BaseUri + EndPoint enums
 │   └── TestData/               # DataProviders, constants
-├── DatabasePojo/               # Firestore POJOs
 ├── Payloads/
 │   ├── RequestPayload/         # Payload builders
 │   └── ResponsePayload/        # Expected response templates
@@ -159,7 +151,7 @@ src/main/java/MarketFeed/Api_Test/
 ├── ResponsePojo/               # Response deserialization objects
 ├── Reports/Listeners/          # TestNG listeners per service
 └── Utils/
-    ├── Managers/               # AllureManager, FirestoreManager, RedisManager...
-    ├── Instances/              # Singleton clients (Firestore, Firebase, Redis...)
-    └── Handlers/               # PreRequisiteValidator, environment detection
+    ├── Managers/               # AllureManager, database managers, etc.
+    ├── Instances/              # Singleton clients (DB, cache, cloud...)
+    └── Handlers/               # Validators, environment detection
 ```

@@ -11,32 +11,20 @@ Generate mobile app test scaffolding with page objects and UI test flows.
 ## Examples
 
 ```
-/qa:app-scaffold Login screen with email, password, and OTP
-/qa:app-scaffold Portfolio dashboard showing holdings and P&L
-/qa:app-scaffold Order placement flow: select strategy -> configure -> confirm -> verify
+/qa:app-scaffold Login screen with email, password, and forgot password link
 /qa:app-scaffold Settings screen with theme toggle and notification preferences
+/qa:app-scaffold Checkout flow: cart -> shipping -> payment -> confirmation
+/qa:app-scaffold Profile screen with avatar upload and edit fields
 ```
 
 ## What It Generates
 
-| File | Location | Purpose |
-|------|----------|---------|
-| Screen class | `Screens/<Feature>/FeatureScreen.java` | Page object with elements and actions |
-| Test class | `src/test/java/.../<Feature>Test.java` | Test with driver lifecycle |
-| TestNG Suite XML | `test-suite/testng-Feature.xml` | Suite definition |
-| Maven Profile | `pom.xml` | Run configuration |
-
-## Key Patterns
-
-The generated code follows these exact conventions from your framework:
-
-- **Screen classes** extend `MobileActions`
-- **Elements are private methods** (not fields) — prevents staleness
-- **ElementHandler.getElement(driver, android, ios)** for cross-platform locators
-- **Action methods** are verb-based: `clickButton()`, `enterText()`, `isScreenDisplayed()`
-- **Test classes** use `DriverManager.initializeDriver()` in `@BeforeClass`
-- **Screen objects** are static class variables
-- **Test methods** use priority ordering and Allure annotations
+| File | Purpose |
+|------|---------|
+| Screen class | Page object with elements and actions |
+| Test class | Test with driver lifecycle |
+| TestNG Suite XML | Suite definition |
+| Maven Profile | Run configuration |
 
 ## Cross-Platform Support
 

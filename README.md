@@ -1,8 +1,8 @@
-# QA Pilot
+# QA Forge
 
-> QA-specific meta-prompting and workflow system for Claude Code.
+> Context-engineered QA workflows for Claude Code — test plans, scaffolding, bug investigation, and more from a single `/qa` command.
 
-QA Pilot is a context-engineered CLI tool that installs intelligent slash commands into [Claude Code](https://claude.com/claude-code). It ships with a curated QA knowledge base that guides Claude to generate test plans, scaffold automation code, investigate bugs, detect flaky tests, and more — all following your project's exact patterns and conventions.
+QA Forge is a CLI tool that installs intelligent slash commands into [Claude Code](https://claude.com/claude-code). It ships with a curated QA knowledge base that guides Claude to generate test plans, scaffold automation code, investigate bugs, detect flaky tests, and more — all following your project's exact patterns and conventions.
 
 ---
 
@@ -25,12 +25,12 @@ QA Pilot is a context-engineered CLI tool that installs intelligent slash comman
 
 ```bash
 # Install globally (works across all projects)
-npx qa-pilot
+npx qaforge
 
 # Then in Claude Code, type:
-/qa:test-plan TAP order placement flow
+/qa:test-plan user registration flow
 /qa:api-scaffold POST /v1/orders
-/qa:bug-investigate NoHttpResponseException in TAP regression
+/qa:bug-investigate TimeoutException in checkout regression
 ```
 
 ## Installation
@@ -40,7 +40,7 @@ npx qa-pilot
 Installs commands to `~/.claude/commands/qa/` so they're available in every project.
 
 ```bash
-npx qa-pilot --global
+npx qaforge --global
 ```
 
 ### Local Install
@@ -48,7 +48,7 @@ npx qa-pilot --global
 Installs to the current project's `.claude/` directory. Also scans the project and generates context.
 
 ```bash
-npx qa-pilot --local
+npx qaforge --local
 ```
 
 ### Interactive
@@ -56,14 +56,14 @@ npx qa-pilot --local
 Installs globally and scans the current project.
 
 ```bash
-npx qa-pilot
+npx qaforge
 ```
 
 ### Verify Installation
 
 ```bash
-npx qa-pilot --version
-npx qa-pilot --help
+npx qaforge --version
+npx qaforge --help
 ```
 
 ## Commands
@@ -76,28 +76,28 @@ npx qa-pilot --help
 | `/qa:app-scaffold` | Scaffold mobile app tests (screen objects, test class, suite XML) | [Guide](docs/commands/app-scaffold.md) |
 | `/qa:bug-investigate` | Root cause analysis from failures, logs, or stack traces | [Guide](docs/commands/bug-investigate.md) |
 | `/qa:regression-plan` | Impact-based regression plan from code changes | [Guide](docs/commands/regression-plan.md) |
-| `/qa:test-data` | Generate test data (JSON, DataProviders, Firestore, Redis, CSV) | [Guide](docs/commands/test-data.md) |
+| `/qa:test-data` | Generate test data (JSON, DataProviders, DB fixtures, cache, CSV) | [Guide](docs/commands/test-data.md) |
 | `/qa:flaky-detect` | Detect flaky tests, classify root causes, suggest fixes | [Guide](docs/commands/flaky-detect.md) |
 | `/qa:coverage-gap` | Find untested endpoints, screens, and missing scenarios | [Guide](docs/commands/coverage-gap.md) |
 
 ## Project Scanning
 
 ```bash
-npx qa-pilot --scan
+npx qaforge --scan
 ```
 
-Generates `.claude/qa-pilot-context.md` with auto-detected:
+Generates `.claude/qaforge-context.md` with auto-detected:
 - Framework (Maven/TestNG, pytest, Playwright, etc.)
 - Test inventory (file counts by language)
 - Maven profiles / pytest markers
 - CI/CD configuration
 - Dependencies
 
-Run this inside each project directory for best results. The context file helps commands understand your project structure without you having to explain it each time.
+Run this inside each project directory for best results.
 
 ## Knowledge Base
 
-QA Pilot ships with a curated knowledge base — this is what "trains" the commands to produce high-quality, framework-specific output instead of generic responses.
+QA Forge ships with a curated knowledge base — this is what "trains" the commands to produce high-quality, framework-specific output instead of generic responses.
 
 ```
 knowledge/
@@ -117,7 +117,7 @@ knowledge/
     coverage-criteria.md
 ```
 
-Installed to `~/.claude/qa-pilot-knowledge/` and referenced by commands at execution time. See [Knowledge Base Architecture](docs/architecture/knowledge-base.md) for details.
+Installed to `~/.claude/qaforge-knowledge/` and referenced by commands at execution time. See [Knowledge Base Architecture](docs/architecture/knowledge-base.md) for details.
 
 ## Supported Frameworks
 
@@ -145,13 +145,13 @@ Installed to `~/.claude/qa-pilot-knowledge/` and referenced by commands at execu
                                              |
                                     +--------+---------+
                                     | Project Context  |
-                                    | (qa-pilot-context|
+                                    | (qaforge-context|
                                     |  .md from scan)  |
                                     +------------------+
 ```
 
-1. **Install** -- Commands go to `~/.claude/commands/qa/`, knowledge to `~/.claude/qa-pilot-knowledge/`
-2. **Scan** -- Auto-detect project framework and generate `.claude/qa-pilot-context.md`
+1. **Install** -- Commands go to `~/.claude/commands/qa/`, knowledge to `~/.claude/qaforge-knowledge/`
+2. **Scan** -- Auto-detect project framework and generate `.claude/qaforge-context.md`
 3. **Execute** -- Type `/qa:<command>` in Claude Code. It reads knowledge + context + your actual code
 4. **Output** -- Generates code, plans, or reports following your exact framework patterns
 
@@ -161,7 +161,7 @@ Installed to `~/.claude/qa-pilot-knowledge/` and referenced by commands at execu
 |----------|-------------|
 | [Getting Started Guide](docs/guides/getting-started.md) | First-time setup and walkthrough |
 | [Command Reference](docs/commands/README.md) | Detailed guide for every command |
-| [Architecture Overview](docs/architecture/README.md) | How QA Pilot is designed |
+| [Architecture Overview](docs/architecture/README.md) | How QA Forge is designed |
 | [Knowledge Base](docs/architecture/knowledge-base.md) | How the "training" works |
 | [Contributing Guide](CONTRIBUTING.md) | How to add commands and knowledge |
 | [Changelog](CHANGELOG.md) | Version history |

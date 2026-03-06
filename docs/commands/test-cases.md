@@ -11,10 +11,10 @@ Generate detailed test cases from a feature description, test plan, or user stor
 ## Examples
 
 ```
-/qa:test-cases Trade idea creation with iron condor strategy
-/qa:test-cases Login screen validation for Android and iOS
-/qa:test-cases Backtest trade comparison for NIFTY weekly
-/qa:test-cases Account service onboarding flow
+/qa:test-cases user login with email, Google OAuth, and MFA
+/qa:test-cases shopping cart add/remove/update quantities
+/qa:test-cases payment processing with credit card and PayPal
+/qa:test-cases file upload with size limits and type validation
 ```
 
 ## What It Does
@@ -29,17 +29,7 @@ Generate detailed test cases from a feature description, test plan, or user stor
 4. **Creates equivalence partitioning table** and **boundary value table**
 5. **Maps to your automation framework** — suggests exact class names, method signatures, annotations
 
-## Output Format
-
-Each test case includes:
-- Type (Positive/Negative/Edge/Boundary)
-- Priority (P0-P3)
-- Pre-conditions
-- Test data
-- Step-by-step procedure
-- Expected result
-- API details (method, endpoint, payload, expected status)
-- Automation notes (framework-specific hints)
+## Output
 
 Saved to `doc/test-cases/<feature-name>-<YYYY-MM-DD>.md`
 

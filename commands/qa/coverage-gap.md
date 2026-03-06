@@ -18,7 +18,7 @@ If no argument is provided, ask the user for:
 ## Knowledge Base
 
 **MUST READ:**
-- `~/.claude/qa-pilot-knowledge/standards/coverage-criteria.md` — per-endpoint checklists, coverage levels, metrics targets
+- `~/.claude/qaforge-knowledge/standards/coverage-criteria.md` — per-endpoint checklists, coverage levels, metrics targets
 
 ## Instructions
 

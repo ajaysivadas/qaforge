@@ -84,20 +84,7 @@ Everything in Level 2, plus:
 - [ ] Cross-source consistency
 - [ ] No duplicate records
 - [ ] Schema matches expected structure
-- [ ] Edge cases: market open/close, holidays, expiry days
-
-## Service Dependency Coverage
-
-For the Marketfeed service graph:
-```
-TAP -> TWS, TMS, TIS, Bundle, UserPnl, SignalAccuracy, MobileAPI
-```
-
-Each dependency edge should have:
-- [ ] Happy path integration test
-- [ ] Failure propagation test (what happens when dependency is down)
-- [ ] Data consistency test (same data in both services)
-- [ ] Latency test (cascading delays)
+- [ ] Edge cases: holidays, off-hours, boundary dates
 
 ## Coverage Metrics Targets
 

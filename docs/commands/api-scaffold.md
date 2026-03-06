@@ -11,48 +11,40 @@ Generate complete API test automation code from endpoint specifications.
 ## Examples
 
 ```
-/qa:api-scaffold POST /v1/trade-ideas with strategyType and strikes payload
-/qa:api-scaffold GET /v1/orders/{orderId} for TAP service
-/qa:api-scaffold CRUD endpoints for Account Service
+/qa:api-scaffold POST /v1/orders with productId and quantity payload
+/qa:api-scaffold GET /v1/users/{userId} for user service
+/qa:api-scaffold CRUD endpoints for product catalog
 /qa:api-scaffold https://api.example.com/swagger.json
 ```
 
 ## What It Generates
 
-### For Java/TestNG (API-Automation):
+### For Java/TestNG:
 
-| File | Location | Purpose |
-|------|----------|---------|
-| EndPoint addition | `Base/URI/EndPoint.java` | New endpoint constant |
-| BaseUri addition | `Base/URI/BaseUri.java` | New service URI (if needed) |
-| Request POJO | `RequestPojo/<Service>/` | Request body object |
-| Response POJO | `ResponsePojo/<Service>/` | Response deserialization object |
-| API Executor | `ApiExecutors/<Service>/` | Static synchronized API call methods |
-| Test Class (positive) | `src/test/java/.../<Feature>/` | Happy path test |
-| Test Class (negative) | `src/test/java/.../<Feature>/` | Error case tests (401, 400, 404) |
-| TestNG Suite XML | `test-suite/<Service>/` | Suite definition |
-| Maven Profile | `pom.xml` | Run configuration |
+| File | Purpose |
+|------|---------|
+| Endpoint constant | New endpoint in enum/config |
+| Base URI addition | New service URI (if needed) |
+| Request POJO | Request body object |
+| Response POJO | Response deserialization object |
+| API Executor | Static synchronized API call methods |
+| Test Class (positive) | Happy path tests |
+| Test Class (negative) | Error case tests (401, 400, 404) |
+| TestNG Suite XML | Suite definition |
+| Maven Profile | Run configuration |
 
-### For Python/pytest (Quant-Research):
+### For Python/pytest:
 
-| File | Location | Purpose |
-|------|----------|---------|
-| Manager class | `src/managers/` | API wrapper using existing patterns |
-| Test module | `tests/<feature>/` | Test functions with fixtures |
-| Conftest | `tests/<feature>/conftest.py` | Feature-specific fixtures |
+| File | Purpose |
+|------|---------|
+| Manager class | API wrapper using existing patterns |
+| Test module | Test functions with fixtures |
+| Conftest | Feature-specific fixtures |
 
 ## How It Works
 
-1. Reads your existing code to match patterns exactly:
-   - Existing API executors (style, return types, method signatures)
-   - Existing test classes (annotation patterns, assertion usage)
-   - Existing POJOs (field naming, serialization annotations)
-2. Follows the knowledge base rules:
-   - API calls in `@BeforeClass`, assertions in `@Test`
-   - One assertion per test method
-   - Static response fields shared across methods
-   - Private callback methods for Allure step wrapping
-   - `Assertions` class (not raw TestNG assertions)
+1. Reads your existing code to match patterns exactly
+2. Follows the knowledge base rules for structure and conventions
 3. Asks for confirmation before writing any files
 
 ## Tips

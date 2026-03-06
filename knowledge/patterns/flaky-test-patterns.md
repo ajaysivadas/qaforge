@@ -28,9 +28,9 @@ assertNotNull(result, "Result not available after 10 seconds");
 from tenacity import retry, stop_after_delay, wait_exponential
 
 @retry(stop=stop_after_delay(30), wait=wait_exponential(multiplier=1, max=5))
-def wait_for_signal(variant_id):
-    docs = FirestoreManager.get_documents_by_field(collection, "variant_id", variant_id)
-    assert len(docs) > 0, "Signal not yet generated"
+def wait_for_result(id):
+    docs = DbManager.get_documents_by_field(collection, "id", id)
+    assert len(docs) > 0, "Result not yet available"
     return docs[0]
 ```
 
@@ -63,7 +63,7 @@ private static ThreadLocal<String> token = new ThreadLocal<>();
 
 ## Pattern 4: External Service Dependency
 
-**Symptom**: Test fails when external service (Redis, Firestore, third-party API) is slow or unavailable.
+**Symptom**: Test fails when external service (database, cache, third-party API) is slow or unavailable.
 
 **Root Cause**: No timeout handling, no retry logic, tight coupling to service availability.
 
@@ -85,26 +85,26 @@ public static ValidatableResponse callWithRetry(Supplier<ValidatableResponse> ap
 
 ## Pattern 5: Date/Time Dependent
 
-**Symptom**: Test fails on weekends, holidays, market close hours, or expiry days.
+**Symptom**: Test fails on weekends, holidays, or at specific times of day.
 
-**Root Cause**: Test uses current date/time and assumes market is open or specific data exists.
+**Root Cause**: Test uses current date/time and assumes specific conditions (e.g., business day, market hours).
 
 **Fix**:
 ```python
 # BAD: Uses today's date
 query_date = date.today()
 
-# GOOD: Find last trading day
-from src.utils.date_utils import get_previous_trading_day
-query_date = get_previous_trading_day()
+# GOOD: Find last valid business day
+from src.utils.date_utils import get_previous_business_day
+query_date = get_previous_business_day()
 ```
 
 ```java
 // BAD: Hardcoded date
-String expiry = "2024-01-25";
+String targetDate = "2024-01-25";
 
-// GOOD: Dynamic expiry lookup
-String expiry = RedisManager.getNextExpiry("NIFTY");
+// GOOD: Dynamic date lookup
+String targetDate = DateUtils.getNextValidDate();
 ```
 
 ## Pattern 6: Order-Dependent Tests
@@ -149,9 +149,9 @@ String expiry = RedisManager.getNextExpiry("NIFTY");
 @BeforeClass
 public void setup() {
     // Clear relevant cache before test
-    RedisManager.deleteKeys("prefix:*");
-    // Or restart container if needed
-    ContainerManager.restart("service-name");
+    CacheManager.deleteKeys("prefix:*");
+    // Or restart service if needed
+    ServiceManager.restart("service-name");
 }
 ```
 
@@ -191,6 +191,6 @@ A test is likely flaky if:
 - Pass rate between 60-95% over last 20 runs
 - Fails with different error messages across runs
 - Fails more on CI than locally
-- Fails more during peak hours (market hours)
+- Fails more during peak hours
 - Passes on immediate retry
 - No code change correlates with failure onset

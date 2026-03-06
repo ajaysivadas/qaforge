@@ -3,10 +3,10 @@
 ## Screen (Page Object) Pattern
 
 ```java
-package MarketFeed.Screens.FeatureName;
+package com.yourorg.Screens.FeatureName;
 
-import MarketFeed.Base.MobileActions;
-import MarketFeed.Utils.ElementHandler;
+import com.yourorg.Base.MobileActions;
+import com.yourorg.Utils.ElementHandler;
 import io.appium.java_client.AppiumDriver;
 import org.openqa.selenium.WebElement;
 
@@ -117,13 +117,6 @@ public class FeatureNameTest {
 - `DriverManager.quitDriver()` — cleanup
 - NEVER create drivers directly, always use DriverManager
 
-## Appium Server Management
-
-- **AppiumServer**: ThreadLocal server instances
-- Auto-detects devices/emulators
-- Handles port conflicts automatically
-- Launches emulators if needed
-
 ## Mobile Interactions (MobileActions)
 
 - `click(element)` — tap element
@@ -141,16 +134,10 @@ public class FeatureNameTest {
 - Use `ElementHandler.getElement(driver, androidLocator, iosLocator)` for platform differences
 - Test method names are the same across platforms — only locators differ
 
-## Configuration
-
-- **TestData** class with inner classes: MobileCaps, AppiumServer, AppUserData, Firebase, Allure
-- **SecretsHandler**: Reads from system properties (CI) or config-stage.properties (local)
-- **CheckRunEnvironment**: Detects GitHub Actions vs local
-
-## Package Structure
+## Typical Package Structure
 
 ```
-src/main/java/MarketFeed/
+src/main/java/com/yourorg/
 ├── Base/
 │   ├── DriverManager.java         # ThreadLocal driver management
 │   ├── AppiumServer.java          # Server lifecycle
@@ -159,20 +146,14 @@ src/main/java/MarketFeed/
 │   ├── MobileVerifications.java   # Element verification helpers
 │   └── NativeActions.java         # Platform-native actions
 ├── Screens/<Feature>/             # Page objects organized by feature
-├── Connections/
-│   ├── Instance/                  # Firestore, Firebase, GCP singletons
-│   └── Manager/                   # Service managers for queries
-├── ApiExecutors/                  # REST API calls (RestAssured)
 ├── Assertions/                    # Custom assertions with Allure + screenshots
 ├── Listener/                      # TestNG listeners
-├── TestData/                      # Configuration constants
 └── Utils/
     ├── ElementHandler.java        # Cross-platform element locator
     ├── AllureManager.java         # Allure utilities
-    ├── SecretsHandler.java        # Config/secrets access
-    └── CheckRunEnvironment.java   # CI detection
+    └── SecretsHandler.java        # Config/secrets access
 
-src/test/java/MarketFeed/
+src/test/java/com/yourorg/
 └── <Feature>/                     # Test classes organized by feature
 ```
 

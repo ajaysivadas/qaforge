@@ -11,10 +11,10 @@ Generate a comprehensive test plan for a feature, PR, or user story.
 ## Examples
 
 ```
-/qa:test-plan TAP order placement with chasing limit
+/qa:test-plan user registration with email verification
 /qa:test-plan https://github.com/org/repo/pull/42
-/qa:test-plan New bundle creation endpoint for iron condor strategy
-/qa:test-plan Signal generation for NIFTY weekly expiry
+/qa:test-plan new payment processing endpoint for Stripe integration
+/qa:test-plan shopping cart checkout flow with discount codes
 ```
 
 ## What It Does
@@ -35,16 +35,9 @@ Generate a comprehensive test plan for a feature, PR, or user story.
 
 Saved to `doc/test-plans/<feature-name>-<YYYY-MM-DD>.md`
 
-## Knowledge Base References
-
-- `coverage-criteria.md` — determines coverage levels and checklists
-- `api-testing.md` — API test design patterns
-- `mobile-testing.md` — mobile test verification checklist
-- `data-validation.md` — data pipeline validation patterns
-
 ## Tips for Best Results
 
-- **Be specific**: "TAP order placement with chasing limit for options" is better than "test TAP"
+- **Be specific**: "user registration with email verification and MFA" is better than "test registration"
 - **Provide PR links**: The command can read the diff and generate targeted plans
 - **Run from the project directory**: So it can scan existing tests for gap analysis
-- **Run `npx qa-pilot --scan` first**: Generates project context that improves output quality
+- **Run `npx qaforge --scan` first**: Generates project context that improves output quality

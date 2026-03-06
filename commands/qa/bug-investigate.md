@@ -20,15 +20,15 @@ If no argument is provided, ask the user for:
 ## Knowledge Base
 
 **MUST READ** before investigating:
-- `~/.claude/qa-pilot-knowledge/patterns/flaky-test-patterns.md` — known flaky patterns and fixes
-- The relevant framework file from `~/.claude/qa-pilot-knowledge/frameworks/` — to understand code structure
+- `~/.claude/qaforge-knowledge/patterns/flaky-test-patterns.md` — known flaky patterns and fixes
+- The relevant framework file from `~/.claude/qaforge-knowledge/frameworks/` — to understand code structure
 
 ## Instructions
 
 ### Step 1: Collect Evidence
 
 **If Allure report URL is provided:**
-Use the analyze-allure workflow to fetch failure details.
+Use the analyze-allure workflow to fetch failure details if available, otherwise fetch the report via curl.
 
 **If error/stack trace is provided:**
 Parse the error type, message, and origin. Identify the failing class/method/line.
@@ -49,17 +49,14 @@ Read the relevant log sections.
 
 ### Step 3: Check Known Patterns
 
-Cross-reference against the flaky test patterns knowledge base:
-
-**Common Marketfeed failures:**
-- `NoHttpResponseException` — service overloaded (has retry, 5 attempts)
-- `PreRequisiteValidator` failure — Redis missing option chain data or GCP services down
-- `System.exit(0)` in listener — pre-req check failed
-- `NoSuchElementException` — element not found, check locator
-- `StaleElementReferenceException` — screen transitioned
-- BigQuery timeout — large dataset
-- Redis state stale — container not restarted
-- PubSub message not received — topic/subscription mismatch
+Cross-reference against the flaky test patterns knowledge base. Common failures include:
+- `NoHttpResponseException` — service overloaded, needs retry logic
+- Pre-requisite validation failures — dependent service or data store down
+- `NoSuchElementException` — UI element not found, check locator strategy
+- `StaleElementReferenceException` — screen transitioned, element reference stale
+- Database/query timeouts — large dataset or slow query
+- Cache state stale — service not restarted after config change
+- Message queue delivery failure — topic/subscription mismatch
 
 ### Step 4: Trace Root Cause
 

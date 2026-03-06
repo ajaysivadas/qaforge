@@ -1,91 +1,119 @@
+<div align="center">
+
 # QA Forge
 
-> Context-engineered QA workflows for Claude Code — test plans, scaffolding, bug investigation, and more from a single `/qa` command.
+### Context-engineered QA workflows for Claude Code
 
-QA Forge is a CLI tool that installs intelligent slash commands into [Claude Code](https://claude.com/claude-code). It ships with a curated QA knowledge base that guides Claude to generate test plans, scaffold automation code, investigate bugs, detect flaky tests, and more — all following your project's exact patterns and conventions.
+[![npm version](https://img.shields.io/npm/v/qaforge?color=cb3837&label=npm&logo=npm&logoColor=white)](https://www.npmjs.com/package/qaforge)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D16-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-6B4FBB?logo=anthropic&logoColor=white)](https://claude.ai/claude-code)
 
----
+Test plans, scaffolding, bug investigation, and more from a single `/qa` command.
 
-## Table of Contents
+[Quick Start](#-quick-start) &bull; [Commands](#-commands) &bull; [How It Works](#-how-it-works) &bull; [Docs](#-documentation)
 
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Commands](#commands)
-- [Project Scanning](#project-scanning)
-- [Knowledge Base](#knowledge-base)
-- [Supported Frameworks](#supported-frameworks)
-- [How It Works](#how-it-works)
-- [Documentation](#documentation)
-- [Contributing](#contributing)
-- [License](#license)
+</div>
 
 ---
+
+QA Forge installs intelligent slash commands into [Claude Code](https://claude.ai/claude-code). It ships with a curated knowledge base of **16 files** across 6 frameworks that guides Claude to generate test plans, scaffold automation code, investigate bugs, detect flaky tests, and more — all following your project's exact patterns.
+
+<br>
 
 ## Quick Start
 
 ```bash
-# Install globally (works across all projects)
 npx qaforge
+```
 
-# Then in Claude Code, type:
-/qa:test-plan user registration flow
+Then in Claude Code:
+
+```
+/qa:test-plan user registration flow with OAuth
 /qa:api-scaffold POST /v1/orders
 /qa:bug-investigate TimeoutException in checkout regression
 ```
 
+That's it. Three commands, zero config.
+
+<br>
+
 ## Installation
 
-### Global Install (Recommended)
-
-Installs commands to `~/.claude/commands/qa/` so they're available in every project.
-
 ```bash
+# Global — available in all projects (recommended)
 npx qaforge --global
-```
 
-### Local Install
-
-Installs to the current project's `.claude/` directory. Also scans the project and generates context.
-
-```bash
+# Local — only this project + auto-scan
 npx qaforge --local
-```
 
-### Interactive
-
-Installs globally and scans the current project.
-
-```bash
+# Default — global install + scan current project
 npx qaforge
 ```
 
-### Verify Installation
+<details>
+<summary><b>Management commands</b></summary>
 
 ```bash
-npx qaforge --verify    # Check all files are installed correctly
-npx qaforge --list      # Show installed commands and knowledge files
-npx qaforge --version   # Show version
+npx qaforge --verify      # Check installation integrity
+npx qaforge --list        # Show installed commands & knowledge
+npx qaforge --uninstall   # Clean removal
+npx qaforge --verbose     # Debug output
 ```
 
-### Uninstall
+</details>
 
-```bash
-npx qaforge --uninstall   # Remove from both ~/.claude/ and ./.claude/
-```
+<br>
 
 ## Commands
 
-| Command | Description | Docs |
-|---------|-------------|------|
-| `/qa:test-plan` | Generate test strategy from features, PRs, or requirements | [Guide](docs/commands/test-plan.md) |
-| `/qa:test-cases` | Generate detailed test cases (positive, negative, edge, boundary) | [Guide](docs/commands/test-cases.md) |
-| `/qa:api-scaffold` | Scaffold API test suite (executor, POJOs, test class, suite XML) | [Guide](docs/commands/api-scaffold.md) |
-| `/qa:app-scaffold` | Scaffold mobile app tests (screen objects, test class, suite XML) | [Guide](docs/commands/app-scaffold.md) |
-| `/qa:bug-investigate` | Root cause analysis from failures, logs, or stack traces | [Guide](docs/commands/bug-investigate.md) |
-| `/qa:regression-plan` | Impact-based regression plan from code changes | [Guide](docs/commands/regression-plan.md) |
-| `/qa:test-data` | Generate test data (JSON, DataProviders, DB fixtures, cache, CSV) | [Guide](docs/commands/test-data.md) |
-| `/qa:flaky-detect` | Detect flaky tests, classify root causes, suggest fixes | [Guide](docs/commands/flaky-detect.md) |
-| `/qa:coverage-gap` | Find untested endpoints, screens, and missing scenarios | [Guide](docs/commands/coverage-gap.md) |
+### Planning & Analysis
+
+| Command | What it does |
+|:--------|:-------------|
+| `/qa:test-plan` | Generate a full test strategy from a feature, PR, or user story |
+| `/qa:test-cases` | Produce structured positive, negative, edge, and boundary cases |
+| `/qa:regression-plan` | Analyze code changes and build a prioritized regression plan |
+| `/qa:coverage-gap` | Find untested endpoints, screens, and missing scenarios |
+
+### Code Generation
+
+| Command | What it does |
+|:--------|:-------------|
+| `/qa:api-scaffold` | Scaffold API tests — executors, POJOs, test classes, suite XML |
+| `/qa:app-scaffold` | Scaffold mobile tests — screen objects, UI flows, suite XML |
+| `/qa:test-data` | Generate test data — JSON, DataProviders, DB fixtures, CSV |
+
+### Investigation
+
+| Command | What it does |
+|:--------|:-------------|
+| `/qa:bug-investigate` | Root cause analysis from logs, Allure reports, or stack traces |
+| `/qa:flaky-detect` | Detect flaky tests, classify across 10 patterns, suggest fixes |
+
+> Each command has a detailed guide in [`docs/commands/`](docs/commands/README.md)
+
+<br>
+
+## How It Works
+
+```
+You type:                          QA Forge reads:                      Claude generates:
+┌──────────────────┐    ┌──────────────────────────┐    ┌──────────────────────┐
+│                  │    │  Knowledge Base (16 files)│    │                      │
+│  /qa:<command>   │───>│  Project Context (.md)    │───>│  Code / Plans /      │
+│  <your input>    │    │  Your Codebase (src/)     │    │  Reports             │
+│                  │    │  CLAUDE.md (if exists)     │    │                      │
+└──────────────────┘    └──────────────────────────┘    └──────────────────────┘
+```
+
+1. **Install** — Commands go to `~/.claude/commands/qa/`, knowledge to `~/.claude/qaforge-knowledge/`
+2. **Scan** — Auto-detect your framework and generate `.claude/qaforge-context.md`
+3. **Execute** — Type `/qa:<command>` in Claude Code. It reads knowledge + context + your actual code
+4. **Output** — Code, plans, or reports that follow your exact framework patterns
+
+<br>
 
 ## Project Scanning
 
@@ -93,117 +121,189 @@ npx qaforge --uninstall   # Remove from both ~/.claude/ and ./.claude/
 npx qaforge --scan
 ```
 
-Generates `.claude/qaforge-context.md` with auto-detected:
-- Framework (Maven/TestNG, pytest, Playwright, etc.)
-- Test inventory (file counts by language)
-- Maven profiles / pytest markers
-- CI/CD configuration
-- Dependencies
+Auto-detects from your project root:
 
-Run this inside each project directory for best results.
+| Detected | How |
+|:---------|:----|
+| **Framework** | `pom.xml`, `build.gradle`, `requirements.txt`, `pyproject.toml`, `package.json` |
+| **Test runner** | TestNG, JUnit, pytest, Jest, Vitest, Playwright, Cypress |
+| **Libraries** | RestAssured, Appium, Selenide, Supertest, httpx |
+| **Test inventory** | File counts by language across `src/test`, `tests`, `__tests__`, `spec` |
+| **CI/CD** | GitHub Actions, GitLab CI, Jenkins, CircleCI |
+| **Maven profiles** | Extracted from `<profile>` blocks in `pom.xml` |
+
+<br>
 
 ## Knowledge Base
 
-QA Forge ships with a curated knowledge base — this is what "trains" the commands to produce high-quality, framework-specific output instead of generic responses.
+The knowledge base is what makes QA Forge outputs framework-specific instead of generic. Each file contains real code patterns, naming conventions, and best practices.
 
-```
-knowledge/
-  frameworks/        # Exact code patterns for each framework
-    testng-restassured.md
-    appium-selenide.md
-    pytest.md
-    playwright.md
-    jest.md
-    cypress.md
-  patterns/          # QA best practices and anti-patterns
-    api-testing.md
-    mobile-testing.md
-    data-validation.md
-    flaky-test-patterns.md
-    graphql-testing.md
-    websocket-testing.md
-    network-mocking.md
-  standards/         # Naming, structure, and coverage rules
-    test-naming.md
-    test-structure.md
-    coverage-criteria.md
-```
+<table>
+<tr>
+<td width="33%" valign="top">
 
-Installed to `~/.claude/qaforge-knowledge/` and referenced by commands at execution time. See [Knowledge Base Architecture](docs/architecture/knowledge-base.md) for details.
+**Frameworks** (6)
+- `testng-restassured.md`
+- `appium-selenide.md`
+- `pytest.md`
+- `playwright.md`
+- `jest.md`
+- `cypress.md`
+
+</td>
+<td width="33%" valign="top">
+
+**Patterns** (7)
+- `api-testing.md`
+- `mobile-testing.md`
+- `data-validation.md`
+- `flaky-test-patterns.md`
+- `graphql-testing.md`
+- `websocket-testing.md`
+- `network-mocking.md`
+
+</td>
+<td width="34%" valign="top">
+
+**Standards** (3)
+- `test-naming.md`
+- `test-structure.md`
+- `coverage-criteria.md`
+
+</td>
+</tr>
+</table>
+
+Installed to `~/.claude/qaforge-knowledge/` and referenced by commands at execution time.
+See [Knowledge Base Architecture](docs/architecture/knowledge-base.md) for details.
+
+<br>
 
 ## Supported Frameworks
 
-| Framework | Language | Tools | Status |
-|-----------|----------|-------|--------|
-| TestNG + RestAssured | Java 17 | Maven, Allure | Full support |
-| Appium + Selenide | Java 17 | Maven, Allure | Full support |
-| pytest | Python 3.x | Allure | Full support |
-| Playwright | TypeScript/JS | npm, Allure | Full support |
-| Jest | JavaScript/TS | npm, Supertest | Full support |
-| Cypress | JavaScript | npm | Full support |
+| Framework | Language | Ecosystem | Status |
+|:----------|:---------|:----------|:------:|
+| TestNG + RestAssured | Java 17 | Maven, Allure | ![Full](https://img.shields.io/badge/-Full_Support-2ea44f) |
+| Appium + Selenide | Java 17 | Maven, Allure | ![Full](https://img.shields.io/badge/-Full_Support-2ea44f) |
+| pytest | Python 3.x | pip, Allure | ![Full](https://img.shields.io/badge/-Full_Support-2ea44f) |
+| Playwright | TypeScript/JS | npm, Allure | ![Full](https://img.shields.io/badge/-Full_Support-2ea44f) |
+| Jest | JavaScript/TS | npm, Supertest | ![Full](https://img.shields.io/badge/-Full_Support-2ea44f) |
+| Cypress | JavaScript | npm | ![Full](https://img.shields.io/badge/-Full_Support-2ea44f) |
 
-## How It Works
+<br>
+
+## Common Workflows
+
+<details>
+<summary><b>New Feature Testing</b></summary>
 
 ```
-                                    +------------------+
-                                    |  Your Codebase   |
-                                    | (CLAUDE.md, src) |
-                                    +--------+---------+
-                                             |
-+----------------+    +-----------+    +-----v------+    +------------+
-| /qa:<command>  | -> | Knowledge | -> | Claude Code| -> | Generated  |
-| (slash command)|    | Base (16  |    | (reads all |    | Code/Plans |
-|                |    |  files)   |    |  context)  |    | /Reports   |
-+----------------+    +-----------+    +-----+------+    +------------+
-                                             |
-                                    +--------+---------+
-                                    | Project Context  |
-                                    | (qaforge-context|
-                                    |  .md from scan)  |
-                                    +------------------+
+/qa:test-plan user registration with email and OAuth    # 1. Plan
+/qa:test-cases user registration                        # 2. Cases
+/qa:api-scaffold POST /v1/users                         # 3. Code
+/qa:test-data User model                                # 4. Data
 ```
 
-1. **Install** -- Commands go to `~/.claude/commands/qa/`, knowledge to `~/.claude/qaforge-knowledge/`
-2. **Scan** -- Auto-detect project framework and generate `.claude/qaforge-context.md`
-3. **Execute** -- Type `/qa:<command>` in Claude Code. It reads knowledge + context + your actual code
-4. **Output** -- Generates code, plans, or reports following your exact framework patterns
+</details>
+
+<details>
+<summary><b>Release Preparation</b></summary>
+
+```
+/qa:regression-plan PR #142                             # 1. What to retest
+/qa:coverage-gap users-service                          # 2. Find gaps
+/qa:flaky-detect last 20 CI runs                        # 3. Flaky tests
+```
+
+</details>
+
+<details>
+<summary><b>Debugging a Failure</b></summary>
+
+```
+/qa:bug-investigate TimeoutException in OrderServiceTest
+```
+
+</details>
+
+<br>
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Getting Started Guide](docs/guides/getting-started.md) | First-time setup and walkthrough |
-| [Command Reference](docs/commands/README.md) | Detailed guide for every command |
-| [Architecture Overview](docs/architecture/README.md) | How QA Forge is designed |
-| [Knowledge Base](docs/architecture/knowledge-base.md) | How the "training" works |
-| [Contributing Guide](CONTRIBUTING.md) | How to add commands and knowledge |
-| [Changelog](CHANGELOG.md) | Version history |
+| | Document | Description |
+|:--|:---------|:------------|
+| **Start** | [Getting Started](docs/guides/getting-started.md) | First-time setup and walkthrough |
+| **Use** | [Command Reference](docs/commands/README.md) | Detailed guide for every command |
+| **Understand** | [Architecture](docs/architecture/README.md) | How QA Forge is designed |
+| **Extend** | [Knowledge Base](docs/architecture/knowledge-base.md) | How the "training" works |
+| **Contribute** | [Contributing](CONTRIBUTING.md) | Add commands, knowledge, frameworks |
+| **History** | [Changelog](CHANGELOG.md) | Version history |
+
+<br>
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| Commands don't appear in Claude Code | Run `npx qaforge --verify` to check. Reinstall with `npx qaforge --global` |
-| `npx qaforge` hangs | Check Node.js version (`node -v`, needs ≥16). Try `npx qaforge@latest` |
-| Scanner doesn't detect my framework | Ensure you run `npx qaforge --scan` from the project root (where `pom.xml`, `package.json`, etc. live) |
-| Generated code doesn't match my patterns | Add a `CLAUDE.md` to your project root with your specific conventions. QA Forge commands read it automatically |
-| Need debug output | Run with `npx qaforge --verbose` |
+<details>
+<summary><b>Commands don't appear in Claude Code</b></summary>
+
+```bash
+npx qaforge --verify    # Check what's missing
+npx qaforge --global    # Reinstall
+```
+
+</details>
+
+<details>
+<summary><b>Scanner doesn't detect my framework</b></summary>
+
+Run from the project root where your build file (`pom.xml`, `package.json`, etc.) lives:
+
+```bash
+cd ~/your-project
+npx qaforge --scan --verbose
+```
+
+</details>
+
+<details>
+<summary><b>Generated code doesn't match my patterns</b></summary>
+
+Add a `CLAUDE.md` to your project root with your conventions. QA Forge commands read it automatically for project-specific guidance.
+
+</details>
+
+<details>
+<summary><b>Need to start fresh</b></summary>
+
+```bash
+npx qaforge --uninstall && npx qaforge
+```
+
+</details>
+
+<br>
 
 ## Limitations
 
-- **Requires Claude Code** — QA Forge is a command pack for Claude Code, not a standalone test runner
-- **Knowledge is guidance, not enforcement** — Claude uses the knowledge base as context, not strict rules. Review generated output
-- **No runtime test execution** — QA Forge generates code and plans, it doesn't execute tests
-- **Framework detection is file-based** — Scanner looks for build files (`pom.xml`, `package.json`, etc.) in the current directory only
+- **Requires [Claude Code](https://claude.ai/claude-code)** — QA Forge is a command pack, not a standalone test runner
+- **Knowledge is guidance** — Claude uses the knowledge base as context. Always review generated output
+- **No runtime execution** — Generates code and plans, doesn't run tests
+- **File-based detection** — Scanner looks for build files in the current directory only
+
+<br>
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to:
-- Add new commands
-- Extend the knowledge base
-- Add support for new frameworks
-- Submit improvements
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add new commands, extend the knowledge base, or add framework support.
+
+<br>
 
 ## License
 
-MIT -- see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE) for details.
+
+---
+
+<div align="center">
+<sub>Built for QA engineers who ship quality fast.</sub>
+</div>

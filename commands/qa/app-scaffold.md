@@ -32,15 +32,41 @@ Analyze the input for: screens involved, actions per screen, transitions, assert
 
 If a screenshot path is provided, use the Read tool to view it — Claude Code can read images and identify UI elements, labels, buttons, and layout from screenshots.
 
+If the input is unclear (e.g., just a screen name with no flow details), ask: "Can you describe the user flow step by step, or provide a screenshot of the screen?"
+
 ### Step 2: Read Existing Framework Code
 
-Scan the current project for existing patterns:
-1. Existing screen/page object classes — match the pattern exactly
-2. Element handler or locator utility — understand locator approach
-3. Base action class — available interaction methods
-4. Existing test classes — match structure
+Scan the current project for existing patterns using concrete searches:
+1. `Glob("**/screens/*.java")` or `Glob("**/pages/*.java")` — find existing screen/page object classes and match the pattern exactly
+2. `Grep("ElementHandler", "src/")` or `Grep("element(", "src/")` — find element handler or locator utility to understand the locator approach
+3. `Glob("**/base/*Action*.java")` — find base action class for available interaction methods
+4. `Glob("**/test/**/*Test.java")` — find existing test classes and match structure
 
-### Step 3: Generate Code
+If no existing patterns are found, use the knowledge base patterns as the template.
+
+### Step 3: Cross-Platform Considerations
+
+**Do this BEFORE code generation** to inform the generated code.
+
+Flag elements needing platform-specific handling:
+- Date pickers, native dialogs, keyboard interactions
+- Different gesture behaviors (swipe, scroll, long press)
+- Platform-specific navigation (back button, tab bar)
+- Status bar, permissions dialogs, notification handling
+
+For each flagged element, note the platform-specific approach that the generated code should use.
+
+### Step 4: Confirm Scope (Checkpoint)
+
+Present to the user before generating:
+- Screens to generate: <list>
+- Platform(s): Android / iOS / Both
+- Cross-platform flags: <count> elements needing platform handling
+- Files to create: <list of file names>
+
+Ask: "Proceed with generation?"
+
+### Step 5: Generate Code
 
 Follow the **exact patterns** from the knowledge base:
 
@@ -55,14 +81,11 @@ Key rules:
 - Screen class has action methods (verb-based) and verification methods
 - Test class: @BeforeClass inits driver + screens, @AfterClass quits
 - Test methods use custom Assertions class with Allure integration
+- Apply cross-platform flags from Step 3 (use platform conditionals where noted)
 
-### Step 4: Cross-Platform Considerations
+### Step 6: Present and Confirm
 
-Flag elements needing platform-specific handling:
-- Date pickers, native dialogs, keyboard interactions
-- Different gesture behaviors
-- Platform-specific navigation
-
-### Step 5: Present and Confirm
-
-List all files. Ask for confirmation. Create files. Report results.
+List all files created. Report results with a summary:
+| File | Type | Lines |
+|------|------|-------|
+| <path> | Screen Class / Test Class / Suite XML | <count> |

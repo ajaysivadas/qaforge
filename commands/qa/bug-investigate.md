@@ -29,14 +29,29 @@ If no argument is provided, ask the user for:
 
 ### Step 1: Collect Evidence
 
+Gather evidence from whatever sources are available. Try each in order of usefulness:
+
 **If Allure report URL is provided:**
-Use the analyze-allure workflow to fetch failure details if available, otherwise fetch the report via curl.
+1. Check if the `/qa:analyze-allure` slash command is available (it may not be installed)
+2. If available, use it to fetch structured failure data
+3. If not available, fetch the report directly: `curl -s "<allure-url>/api/report" | jq '.failures'`
+4. If curl fails (auth required, URL unreachable), ask the user to paste the failure details manually
 
 **If error/stack trace is provided:**
-Parse the error type, message, and origin. Identify the failing class/method/line.
+Parse and extract:
+- Error type (e.g., `AssertionError`, `NullPointerException`, `TimeoutError`)
+- Error message (the human-readable part)
+- Origin: failing class/method/line number
+- Call chain: the stack frames leading to the failure
 
 **If logs are provided or a log path is given:**
-Read the relevant log sections.
+Read the log file with `Read("<path>")`. Search for:
+- `Grep("ERROR\\|FATAL\\|Exception", "<log-path>")` to find error entries
+- Timestamps around the failure window
+- Correlation IDs or request IDs to trace the flow
+
+**If none of the above is available:**
+Ask the user: "Can you provide an error message, stack trace, log file path, or Allure report URL?"
 
 ### Step 2: Classify the Failure
 
@@ -68,7 +83,11 @@ Cross-reference against the flaky test patterns knowledge base. Common failures 
 4. **What changed?** — recent deployments, config changes
 5. **Is it reproducible?** — check history
 
-Read the failing test code and its dependencies to understand the full call chain.
+Read the failing test code and its dependencies to understand the full call chain:
+1. `Grep("<failing-method-name>", "src/test/")` to find the test file
+2. Read the test file to understand what it does
+3. `Grep("<called-method>", "src/")` to trace into production code or API executors
+4. Check recent changes: `git log --oneline -10 -- <failing-file>` to see if the file was recently modified
 
 ### Step 5: Generate Investigation Report
 

@@ -33,19 +33,26 @@ Otherwise collect: base URI, endpoint path(s), HTTP method(s), request payload, 
 
 ### Step 2: Read Existing Framework Code
 
-Scan the current project to understand existing patterns:
+Scan the current project to understand existing patterns using concrete searches:
 
-For Java/TestNG projects, look for:
-1. Base URI enum or config — existing service URIs
-2. Endpoint enum or constants — existing endpoint paths
-3. Existing API executor classes — match the exact style
-4. Existing test classes — match the exact annotation and structure style
-5. TestNG suite XMLs — match XML format
+**For Java/TestNG projects:**
+1. `Grep("enum.*URI\\|BASE_URI\\|baseUri", "src/")` — find base URI enum or config
+2. `Grep("enum.*Endpoint\\|endpoint", "src/")` or `Glob("**/endpoints/*.java")` — find endpoint constants
+3. `Glob("**/executor/*Executor.java")` or `Glob("**/api/*Api.java")` — find existing API executor classes
+4. `Glob("src/test/**/*Test.java")` — find existing test classes for style reference
+5. `Glob("**/test-suite/**/*.xml")` — find TestNG suite XMLs
 
-For Python projects, look for:
-1. Existing manager classes — match API wrapper patterns
-2. `conftest.py` — existing fixtures
-3. Existing test files — match style
+**For Python projects:**
+1. `Glob("**/managers/*.py")` or `Glob("**/api/*.py")` — find API wrapper patterns
+2. `Read("tests/conftest.py")` — read existing fixtures
+3. `Glob("tests/**/*test*.py")` — find existing test files for style
+
+**For JS/TS projects:**
+1. `Glob("**/*.{test,spec}.{ts,js}")` — find existing tests
+2. `Glob("**/fixtures/**")` — find test fixtures and helpers
+3. Read `package.json` to identify test framework (Jest, Playwright, Cypress)
+
+Read at least one existing test file and one executor/helper to match the exact code style. If no existing patterns are found, use the knowledge base patterns as the template.
 
 ### Step 3: Generate Code
 
@@ -79,6 +86,11 @@ For each endpoint, also generate:
 
 ### Step 5: Present and Confirm
 
-List all files to be created/modified with a summary. Ask user for confirmation before writing files.
+List all files to be created/modified with a summary:
+| # | File Path | Type | Action |
+|---|-----------|------|--------|
+| 1 | <path> | Executor / Test / POJO / Suite XML | Create / Modify |
 
-After confirmation, create all files. Report what was generated.
+Ask user for confirmation before writing files.
+
+After confirmation, create all files. Report what was generated with line counts per file.

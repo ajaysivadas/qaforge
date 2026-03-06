@@ -36,22 +36,45 @@ gh pr diff <PR_NUMBER> --name-only
 
 ### Step 2: Map Impact Using Service Dependencies
 
-Analyze the project's architecture to understand service dependencies. Look for:
-- Direct dependencies (service A calls service B)
-- Data dependencies (shared databases, caches, message queues)
-- Configuration dependencies (shared config, feature flags)
+Analyze the project's architecture to understand service dependencies.
 
-If the project has a CLAUDE.md with a dependency graph, use it. Otherwise, infer from the codebase.
+**If CLAUDE.md exists and has a dependency graph**, use it as the primary source.
 
-### Step 3: Find Existing Test Suites
+**If no dependency graph is available**, build one from the code:
+1. `Grep("import.*<changed-class>", "src/")` — find files that import changed code
+2. `Grep("@FeignClient\\|RestTemplate\\|WebClient\\|httpx\\|requests\\.get\\|fetch(", "src/")` — find service-to-service calls
+3. `Grep("@Table\\|@Entity\\|model\\|schema", "src/")` — find shared data models
+4. `Glob("**/application*.yml")` or `Glob("**/config*")` — find shared configuration
+
+Categorize dependencies:
+- **Direct**: Files that import or call the changed code
+- **Data**: Services sharing the same database tables, caches, or queues
+- **Config**: Services sharing feature flags or configuration values
+
+### Step 3: Confirm Scope (Checkpoint)
+
+Present to the user before generating the full plan:
+- Changes detected: <count files, count services>
+- Impact radius: <direct deps> direct, <indirect deps> indirect
+- Risk assessment: HIGH / MEDIUM / LOW
+
+> **Risk criteria:**
+> - **HIGH**: Changes to auth, payments, data mutations, or >3 services affected
+> - **MEDIUM**: Changes to single-service business logic or API contracts
+> - **LOW**: Config, logging, test-only, or documentation changes
+
+Ask: "Does this impact assessment look correct? Any services to add or exclude?"
+
+### Step 4: Find Existing Test Suites
 
 Search the project for test suites covering impacted areas:
-- TestNG suite XMLs in `test-suite/`
-- Maven profiles in `pom.xml`
-- pytest test modules in `tests/`
-- Playwright test specs
+- `Glob("**/test-suite/**/*.xml")` — TestNG suite XMLs
+- `Grep("<profile>", "pom.xml")` — Maven profiles (if pom.xml exists)
+- `Glob("tests/**/*test*.py")` — pytest test modules
+- `Glob("**/*.spec.{ts,js}")` — Playwright/Jest test specs
+- `Glob("**/cypress/e2e/**/*.cy.{ts,js}")` — Cypress specs
 
-### Step 4: Prioritize into Tiers
+### Step 5: Prioritize into Tiers
 
 | Tier | Criteria | When to Run |
 |------|----------|-------------|
@@ -60,7 +83,11 @@ Search the project for test suites covering impacted areas:
 | **P2** | Tests indirect dependencies | After deployment |
 | **P3** | Smoke for unrelated services | Nightly |
 
-### Step 5: Generate Plan
+### Step 6: Generate Plan
+
+**Output size guide:** Keep the plan actionable. Aim for 5-15 suites across all tiers. If more than 15, consolidate related suites.
+
+**Populating the template:** Fill every `<placeholder>` with actual values from previous steps. Do not leave angle-bracket placeholders in the output.
 
 ```markdown
 # Regression Plan
@@ -96,6 +123,6 @@ Search the project for test suites covering impacted areas:
 - [ ] No blocker/critical issues
 ```
 
-### Step 6: Save
+### Step 7: Save
 
 Write to `doc/regression-plans/<name>-<YYYY-MM-DD>.md`. Report file path.

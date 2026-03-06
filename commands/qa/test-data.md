@@ -29,9 +29,12 @@ If no argument is provided, ask the user for:
 
 ### Step 1: Understand Schema
 
-If a POJO/model class is referenced, read it and extract all fields with types and constraints.
-If a Swagger/OpenAPI spec is available, parse the request/response schemas.
-If described in words, infer the schema and confirm with the user.
+Determine the schema from the best available source, in priority order:
+
+1. **If a POJO/model class is referenced:** Read the file and extract all fields with types and constraints. Use `Grep("@NotNull\\|@Size\\|@Min\\|@Max\\|@Pattern\\|@Email\\|required", "<model-file>")` to find validation annotations.
+2. **If a Swagger/OpenAPI spec is available:** Parse the request/response schemas from the spec.
+3. **If an endpoint is referenced but no model file given:** Use `Grep("<endpoint-path>", "src/")` to find the controller/route, then trace to the request/response model.
+4. **If described in words:** Infer the schema and present it to the user for confirmation before proceeding.
 
 Document the schema:
 | Field | Type | Required | Constraints | Example |
@@ -40,7 +43,17 @@ Document the schema:
 | email | string | yes | valid email | "john@example.com" |
 | age | integer | no | 0-150 | 30 |
 
-### Step 2: Generate Data Sets
+### Step 2: Confirm Scope (Checkpoint)
+
+Present the extracted schema to the user:
+- Entity: <name>
+- Fields: <count>
+- Constraints found: <list>
+- Estimated data sets: <count> (target 15-25 rows; cap at 40 for complex entities)
+
+Ask: "Does this schema look correct? Any fields to add or constraints to adjust?"
+
+### Step 3: Generate Data Sets
 
 For each scenario dimension, generate appropriate data:
 
@@ -72,7 +85,7 @@ For each scenario dimension, generate appropriate data:
 - Just below minimum (invalid)
 - Just above maximum (invalid)
 
-### Step 3: Format for Target
+### Step 4: Format for Target
 
 Generate data in the format matching the project's framework:
 
@@ -153,7 +166,7 @@ INSERT INTO users (name, email, age, created_at) VALUES
   ('Test User 2', 'user2@test.example.com', 25, NOW());
 ```
 
-### Step 4: Generate Setup/Teardown
+### Step 5: Generate Setup/Teardown
 
 Provide code to load and clean up the test data using the project's existing patterns:
 - Database: transactions with rollback, or explicit DELETE in teardown
@@ -161,7 +174,7 @@ Provide code to load and clean up the test data using the project's existing pat
 - Document stores (Firestore, MongoDB): use test collection or unique doc IDs
 - File stores: write to temp directory, clean up after
 
-### Step 5: Security Considerations
+### Step 6: Security Considerations
 
 **NEVER include in generated test data:**
 - Real passwords, API keys, or secrets — use placeholders like `test-password-123`
@@ -176,7 +189,7 @@ Provide code to load and clean up the test data using the project's existing pat
 - Oversized payloads: strings at 10x max length
 - Special encoding: null bytes, unicode exploits
 
-### Step 6: Present and Save
+### Step 7: Present and Save
 
 Present the generated data with a summary table:
 

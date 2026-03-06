@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.2.0] - 2026-03-06
+
+### Changed
+
+#### Prompt engineering — 9 improvements across all 9 commands
+- **Concrete tool instructions**: Replaced vague verbs like "analyze" and "scan" with specific Glob/Grep patterns (e.g., `Glob("src/test/**/*Test.java")`, `Grep("@Test", "<file>")`)
+- **Fallback instructions**: Every input branch now has a fallback path (e.g., "If curl fails, ask the user to paste the failure details manually")
+- **Decision criteria**: Added explicit rules for risk levels (HIGH/MEDIUM/LOW), priority assignment (P0-P3), and coverage targets (Level 1-3)
+- **Template population instructions**: Added "Fill every field — do not leave angle-bracket placeholders in the output" to all template sections
+- **Consistent depth**: Leveled up weaker commands (coverage-gap, regression-plan) to match api-scaffold quality with concrete search patterns and structured gap calculation
+- **Inlined external references**: Replaced undefined "analyze-allure workflow" reference in bug-investigate with concrete fallback chain
+- **Fixed step ordering**: app-scaffold now runs cross-platform analysis (Step 3) BEFORE code generation (Step 5), not after
+- **Output size control**: All commands now have output size guidance (e.g., "target 15-25 cases; cap at 40")
+- **Mid-process checkpoints**: All commands now confirm scope with the user before generating (e.g., "Does this look correct? Any areas to add or exclude?")
+
+---
+
 ## [1.1.0] - 2026-03-06
 
 ### Added

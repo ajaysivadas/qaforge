@@ -47,21 +47,38 @@ function banner() {
 // ── File operations ─────────────────────────────────────────────────────────
 
 function ensureDir(dirPath) {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
+  try {
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+  } catch (err) {
+    log(`${c.red}  ERROR: Cannot create directory ${dirPath}${c.reset}`);
+    log(`${c.dim}  ${err.message}${c.reset}`);
+    process.exit(1);
   }
 }
 
 function copyDir(src, dest) {
   ensureDir(dest);
-  const entries = fs.readdirSync(src, { withFileTypes: true });
+  let entries;
+  try {
+    entries = fs.readdirSync(src, { withFileTypes: true });
+  } catch (err) {
+    log(`${c.red}  ERROR: Cannot read directory ${src}${c.reset}`);
+    log(`${c.dim}  ${err.message}${c.reset}`);
+    return;
+  }
   for (const entry of entries) {
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
     if (entry.isDirectory()) {
       copyDir(srcPath, destPath);
     } else {
-      fs.copyFileSync(srcPath, destPath);
+      try {
+        fs.copyFileSync(srcPath, destPath);
+      } catch (err) {
+        log(`${c.yellow}  [WARN] Failed to copy ${entry.name}: ${err.message}${c.reset}`);
+      }
     }
   }
 }
@@ -69,7 +86,12 @@ function copyDir(src, dest) {
 function countFiles(dir, ext) {
   let count = 0;
   if (!fs.existsSync(dir)) return 0;
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch (err) {
+    return 0;
+  }
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
@@ -79,6 +101,18 @@ function countFiles(dir, ext) {
     }
   }
   return count;
+}
+
+function safeWriteFile(filePath, content) {
+  try {
+    ensureDir(path.dirname(filePath));
+    fs.writeFileSync(filePath, content);
+    return true;
+  } catch (err) {
+    log(`${c.red}  ERROR: Cannot write ${filePath}${c.reset}`);
+    log(`${c.dim}  ${err.message}${c.reset}`);
+    return false;
+  }
 }
 
 // ── Install commands ────────────────────────────────────────────────────────
@@ -155,11 +189,11 @@ function scanAndGenerateContext() {
       if (pom.includes("selenide")) context.push("- UI Helper: Selenide");
       if (pom.includes("allure")) context.push("- Reporting: Allure");
 
-      // Extract profiles
-      const profileRegex = /<id>([^<]+)<\/id>/g;
+      // Extract profiles — only <id> tags inside <profile> blocks
+      const profileBlockRegex = /<profile>\s*<id>([^<]+)<\/id>/g;
       const profiles = [];
       let match;
-      while ((match = profileRegex.exec(pom)) !== null) {
+      while ((match = profileBlockRegex.exec(pom)) !== null) {
         profiles.push(match[1]);
       }
       if (profiles.length > 0) {
@@ -253,7 +287,6 @@ function scanAndGenerateContext() {
 
 function main() {
   const args = process.argv.slice(2);
-  const isAuto = args.includes("--auto");
   const isLocal = args.includes("--local");
   const isGlobal = args.includes("--global");
   const isScan = args.includes("--scan");
@@ -298,14 +331,14 @@ function main() {
     log(`${c.cyan}  Scanning project...${c.reset}`);
     const context = scanAndGenerateContext();
     const outPath = path.join(process.cwd(), ".claude", "qaforge-context.md");
-    ensureDir(path.dirname(outPath));
-    fs.writeFileSync(outPath, context);
-    log(
-      `${c.green}  [OK]${c.reset} Project context written to ${c.bold}.claude/qaforge-context.md${c.reset}`
-    );
-    log(
-      `${c.dim}  This file helps QA Forge commands understand your project.${c.reset}`
-    );
+    if (safeWriteFile(outPath, context)) {
+      log(
+        `${c.green}  [OK]${c.reset} Project context written to ${c.bold}.claude/qaforge-context.md${c.reset}`
+      );
+      log(
+        `${c.dim}  This file helps QA Forge commands understand your project.${c.reset}`
+      );
+    }
     log("");
     process.exit(0);
   }
@@ -313,7 +346,7 @@ function main() {
   // Install mode
   let installed = false;
 
-  if (isGlobal || isAuto) {
+  if (isGlobal) {
     log(`${c.cyan}  Installing globally to ~/.claude/ ...${c.reset}`);
     installCommands(CLAUDE_GLOBAL, "~/.claude/commands/qa/");
     installKnowledge(CLAUDE_GLOBAL, "~/.claude/qaforge-knowledge/");
@@ -329,15 +362,16 @@ function main() {
     log(`\n${c.cyan}  Scanning project for context...${c.reset}`);
     const context = scanAndGenerateContext();
     const outPath = path.join(CLAUDE_LOCAL, "qaforge-context.md");
-    fs.writeFileSync(outPath, context);
-    log(
-      `${c.green}  [OK]${c.reset} Project context written to ${c.bold}.claude/qaforge-context.md${c.reset}`
-    );
+    if (safeWriteFile(outPath, context)) {
+      log(
+        `${c.green}  [OK]${c.reset} Project context written to ${c.bold}.claude/qaforge-context.md${c.reset}`
+      );
+    }
     installed = true;
   }
 
-  if (!isGlobal && !isLocal && !isAuto) {
-    // Interactive: install both
+  if (!isGlobal && !isLocal) {
+    // Default: install globally + scan current project
     log(`${c.cyan}  Installing globally to ~/.claude/ ...${c.reset}`);
     installCommands(CLAUDE_GLOBAL, "~/.claude/commands/qa/");
     installKnowledge(CLAUDE_GLOBAL, "~/.claude/qaforge-knowledge/");
@@ -346,11 +380,11 @@ function main() {
     log(`${c.cyan}  Scanning current project...${c.reset}`);
     const context = scanAndGenerateContext();
     const outPath = path.join(CLAUDE_LOCAL, "qaforge-context.md");
-    ensureDir(path.dirname(outPath));
-    fs.writeFileSync(outPath, context);
-    log(
-      `${c.green}  [OK]${c.reset} Project context saved to .claude/qaforge-context.md`
-    );
+    if (safeWriteFile(outPath, context)) {
+      log(
+        `${c.green}  [OK]${c.reset} Project context saved to .claude/qaforge-context.md`
+      );
+    }
     installed = true;
   }
 

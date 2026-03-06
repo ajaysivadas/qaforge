@@ -8,8 +8,7 @@
   },
   "scripts": {
     "install-commands": "node bin/install.js",
-    "scan": "node scripts/scan-project.js",
-    "postinstall": "node bin/install.js --auto"
+    "scan": "node scripts/scan-project.js"
   },
   "keywords": [
     "qa",

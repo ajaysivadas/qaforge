@@ -17,12 +17,10 @@ If no argument is provided, ask the user for:
 
 ## Knowledge Base
 
-**MUST READ:**
-- `~/.claude/qaforge-knowledge/standards/coverage-criteria.md` — per-endpoint checklists, coverage levels, metrics targets
-- `~/.claude/qaforge-knowledge/patterns/api-testing.md` — request validation matrix for gap identification
-- `~/.claude/qaforge-knowledge/patterns/graphql-testing.md` — if GraphQL APIs detected
-
-Also read project `CLAUDE.md` if it exists — for project-specific endpoints, services, and architecture.
+1. Read `~/.claude/qaforge-knowledge/INDEX.md` to determine which files to load
+2. Read `~/.claude/qaforge-knowledge/standards/coverage-criteria.md` (always needed)
+3. Based on API type detected, read ONLY the matching pattern file (api-testing OR graphql-testing — not both unless both exist)
+4. Read project `CLAUDE.md` if it exists
 
 ## Instructions
 

@@ -18,17 +18,10 @@ If no argument is provided, ask the user for:
 
 ## Knowledge Base
 
-Before generating the plan, read the following knowledge files if they exist:
-- `~/.claude/qaforge-knowledge/standards/coverage-criteria.md` — coverage levels and checklists
-- `~/.claude/qaforge-knowledge/patterns/api-testing.md` — API test design patterns
-- `~/.claude/qaforge-knowledge/patterns/mobile-testing.md` — mobile test patterns
-- `~/.claude/qaforge-knowledge/patterns/data-validation.md` — data pipeline patterns
-- `~/.claude/qaforge-knowledge/patterns/graphql-testing.md` — if GraphQL APIs detected
-- `~/.claude/qaforge-knowledge/patterns/websocket-testing.md` — if real-time features detected
-
-Also read:
-- `.claude/qaforge-context.md` — auto-generated project context
-- Project `CLAUDE.md` if it exists — for project-specific patterns and dependency graphs
+1. Read `~/.claude/qaforge-knowledge/INDEX.md` to determine which files to load
+2. Read `~/.claude/qaforge-knowledge/standards/coverage-criteria.md` (always needed for planning)
+3. Based on detected framework and feature type, read ONLY the matching files from the index — do NOT read all knowledge files
+4. Read `.claude/qaforge-context.md` and project `CLAUDE.md` if they exist
 
 ## Instructions
 

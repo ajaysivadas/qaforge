@@ -19,12 +19,11 @@ If no argument is provided, ask the user for:
 
 ## Knowledge Base
 
-Read before generating:
-- `~/.claude/qaforge-knowledge/patterns/data-validation.md` — data validation patterns, tolerance handling, schema validation
-- The relevant framework file from `~/.claude/qaforge-knowledge/frameworks/` — to match data provider patterns
-- `~/.claude/qaforge-knowledge/standards/test-structure.md` — test data strategy
-
-Also read project `CLAUDE.md` if it exists — for project-specific models, data stores, and conventions.
+1. Read `~/.claude/qaforge-knowledge/INDEX.md` to determine which files to load
+2. Detect the project framework, then read ONLY the matching framework file (for DataProvider/parametrize format)
+3. Read `~/.claude/qaforge-knowledge/patterns/data-validation.md` only if data pipeline or cross-source validation is involved
+4. Skip standards files — not needed for data generation
+5. Read project `CLAUDE.md` if it exists
 
 ## Instructions
 

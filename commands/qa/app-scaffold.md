@@ -19,12 +19,10 @@ If no argument is provided, ask the user for:
 
 ## Knowledge Base
 
-**MUST READ** before generating code:
-- `~/.claude/qaforge-knowledge/frameworks/appium-selenide.md` — screen pattern, element handler, test structure
-- `~/.claude/qaforge-knowledge/patterns/mobile-testing.md` — verification checklist, locator strategy, wait patterns
-- `~/.claude/qaforge-knowledge/standards/test-naming.md` — naming conventions
-
-Also read project CLAUDE.md if it exists.
+1. Read `~/.claude/qaforge-knowledge/INDEX.md` to determine which files to load
+2. Read `~/.claude/qaforge-knowledge/frameworks/appium-selenide.md` and `patterns/mobile-testing.md`
+3. Read `~/.claude/qaforge-knowledge/standards/test-naming.md`
+4. Read project `CLAUDE.md` if it exists
 
 ## Instructions
 

@@ -17,8 +17,9 @@ If no argument is provided, ask the user for:
 
 ## Knowledge Base
 
-**MUST READ** — this is critical for accurate classification:
-- `~/.claude/qaforge-knowledge/patterns/flaky-test-patterns.md` — all 10 flaky patterns with detection heuristics and fixes
+1. Read `~/.claude/qaforge-knowledge/patterns/flaky-test-patterns.md` (critical for classification)
+2. Skip framework, standards, and other pattern files — not needed for flaky detection
+3. Read project `CLAUDE.md` if it exists — for Allure credentials and CI config
 
 ## Instructions
 

@@ -19,12 +19,11 @@ If no argument is provided, ask the user for:
 
 ## Knowledge Base
 
-**MUST READ** before investigating:
-- `~/.claude/qaforge-knowledge/patterns/flaky-test-patterns.md` — known flaky patterns and fixes
-- The relevant framework file from `~/.claude/qaforge-knowledge/frameworks/` — to understand code structure
-- `~/.claude/qaforge-knowledge/patterns/network-mocking.md` — if failure involves external service calls
-
-Also read project `CLAUDE.md` if it exists — for project-specific patterns, dependency graphs, and known issues.
+1. Read `~/.claude/qaforge-knowledge/INDEX.md` to determine which files to load
+2. Read `~/.claude/qaforge-knowledge/patterns/flaky-test-patterns.md` (always needed for investigation)
+3. Detect the project framework, then read ONLY the matching framework file from the index
+4. Only read `patterns/network-mocking.md` if the failure involves external service calls or timeouts
+5. Read project `CLAUDE.md` if it exists
 
 ## Instructions
 

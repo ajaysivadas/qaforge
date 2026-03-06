@@ -18,16 +18,10 @@ If no argument is provided, ask the user for:
 
 ## Knowledge Base
 
-Read these knowledge files before generating:
-- `~/.claude/qaforge-knowledge/standards/test-naming.md` — naming conventions
-- `~/.claude/qaforge-knowledge/standards/coverage-criteria.md` — what to cover
-- `~/.claude/qaforge-knowledge/patterns/api-testing.md` — request validation matrix
-- `~/.claude/qaforge-knowledge/patterns/mobile-testing.md` — if UI/mobile test cases needed
-- `~/.claude/qaforge-knowledge/patterns/graphql-testing.md` — if GraphQL endpoints involved
-
-Also read:
-- `.claude/qaforge-context.md` — auto-generated project context
-- Project `CLAUDE.md` if it exists — for project-specific patterns and conventions
+1. Read `~/.claude/qaforge-knowledge/INDEX.md` to determine which files to load
+2. Read `~/.claude/qaforge-knowledge/standards/coverage-criteria.md` (always needed)
+3. Based on detected framework and feature type (API, mobile, GraphQL, etc.), read ONLY the matching pattern and framework files from the index
+4. Read `.claude/qaforge-context.md` and project `CLAUDE.md` if they exist
 
 ## Instructions
 

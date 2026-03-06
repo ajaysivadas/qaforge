@@ -18,9 +18,10 @@ If no argument is provided, ask the user for:
 
 ## Knowledge Base
 
-Read before generating:
-- `~/.claude/qaforge-knowledge/standards/coverage-criteria.md` — priority definitions, coverage targets
-- `~/.claude/qaforge-knowledge/standards/test-structure.md` — test categorization (smoke, regression, integration)
+1. Read `~/.claude/qaforge-knowledge/INDEX.md` to determine which files to load
+2. Read `~/.claude/qaforge-knowledge/standards/coverage-criteria.md` and `standards/test-structure.md`
+3. Skip framework and pattern files — regression planning doesn't need code patterns
+4. Read project `CLAUDE.md` if it exists — dependency graphs are especially useful here
 
 ## Instructions
 

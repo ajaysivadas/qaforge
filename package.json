@@ -6,6 +6,15 @@
   "bin": {
     "qaforge": "bin/install.js"
   },
+  "files": [
+    "bin",
+    "commands",
+    "knowledge",
+    "scripts",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "install-commands": "node bin/install.js",
     "scan": "node scripts/scan-project.js"
@@ -15,15 +24,27 @@
     "testing",
     "automation",
     "claude-code",
+    "claude",
+    "slash-commands",
     "test-planning",
     "test-generation",
+    "test-automation",
+    "api-testing",
+    "mobile-testing",
     "appium",
     "testng",
+    "rest-assured",
     "pytest",
-    "allure"
+    "playwright",
+    "allure",
+    "context-engineering"
   ],
   "author": "Ajay Sivadas",
   "license": "MIT",
+  "homepage": "https://github.com/ajaysivadas/qaforge#readme",
+  "bugs": {
+    "url": "https://github.com/ajaysivadas/qaforge/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/ajaysivadas/qaforge.git"

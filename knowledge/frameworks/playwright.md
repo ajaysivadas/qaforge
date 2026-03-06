@@ -72,39 +72,125 @@ import { test, expect } from '@playwright/test';
 
 test.describe('API Tests', () => {
   test('GET endpoint returns correct data', async ({ request }) => {
-    const response = await request.get('/api/endpoint');
+    const response = await request.get('/api/users');
     expect(response.status()).toBe(200);
     const body = await response.json();
     expect(body.data).toBeDefined();
+    expect(body.data.length).toBeGreaterThan(0);
   });
 
   test('POST creates resource', async ({ request }) => {
-    const response = await request.post('/api/resource', {
-      data: { name: 'test', value: 123 }
+    const response = await request.post('/api/users', {
+      data: { name: 'Test User', email: 'test@example.com' },
     });
     expect(response.status()).toBe(201);
+    const body = await response.json();
+    expect(body.id).toBeDefined();
+  });
+
+  test('DELETE removes resource', async ({ request }) => {
+    const response = await request.delete('/api/users/1');
+    expect(response.status()).toBe(204);
+  });
+
+  test('handles 404', async ({ request }) => {
+    const response = await request.get('/api/users/99999');
+    expect(response.status()).toBe(404);
   });
 });
+```
+
+## Network Interception
+
+```typescript
+test('mock API response', async ({ page }) => {
+  await page.route('**/api/users', (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: [{ id: 1, name: 'Mock User' }] }),
+    });
+  });
+
+  await page.goto('/users');
+  await expect(page.getByText('Mock User')).toBeVisible();
+});
+
+test('simulate server error', async ({ page }) => {
+  await page.route('**/api/users', (route) => {
+    route.fulfill({ status: 500, body: 'Internal Server Error' });
+  });
+
+  await page.goto('/users');
+  await expect(page.getByTestId('error-state')).toBeVisible();
+});
+
+test('simulate network failure', async ({ page }) => {
+  await page.route('**/api/users', (route) => route.abort('connectionrefused'));
+  await page.goto('/users');
+  await expect(page.getByTestId('offline-message')).toBeVisible();
+});
+
+test('modify real response', async ({ page }) => {
+  await page.route('**/api/users', async (route) => {
+    const response = await route.fetch();
+    const json = await response.json();
+    json.data[0].name = 'Modified';
+    route.fulfill({ response, body: JSON.stringify(json) });
+  });
+
+  await page.goto('/users');
+  await expect(page.getByText('Modified')).toBeVisible();
+});
+```
+
+## Visual Regression Testing
+
+```typescript
+test('homepage visual snapshot', async ({ page }) => {
+  await page.goto('/');
+  await expect(page).toHaveScreenshot('homepage.png');
+});
+
+test('component visual snapshot', async ({ page }) => {
+  await page.goto('/components');
+  const card = page.getByTestId('user-card');
+  await expect(card).toHaveScreenshot('user-card.png', {
+    maxDiffPixelRatio: 0.01,
+  });
+});
+
+// Update snapshots: npx playwright test --update-snapshots
 ```
 
 ## Configuration
 
 ```typescript
 // playwright.config.ts
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
-  retries: 2,
-  reporter: [['html'], ['allure-playwright']],
+  fullyParallel: true,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: [
+    ['html'],
+    ['allure-playwright'],
+    ['junit', { outputFile: 'results.xml' }],
+  ],
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
   projects: [
-    { name: 'chromium', use: { browserName: 'chromium' } },
-    { name: 'mobile', use: { ...devices['iPhone 13'] } },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
+    { name: 'mobile-safari', use: { ...devices['iPhone 13'] } },
   ],
 });
 ```
@@ -117,3 +203,33 @@ export default defineConfig({
 4. `page.getByLabel()` — form fields
 5. `page.locator('css')` — fallback
 6. `page.locator('xpath')` — last resort
+
+## Key Rules
+
+1. Prefer `getByRole` locators — they're resilient to DOM changes
+2. Never use `page.waitForTimeout()` — use `expect` auto-retrying assertions instead
+3. Use `test.describe` for grouping, `test.beforeEach` for setup
+4. API setup via `request` fixture is faster than UI setup
+5. Run tests in parallel by default (`fullyParallel: true`)
+6. Use `--trace on` for debugging — provides screenshots, DOM snapshots, network logs
+7. Visual snapshots are OS-specific — generate per-platform in CI
+
+## Typical Project Structure
+
+```
+tests/
+├── e2e/
+│   ├── auth/
+│   │   └── login.spec.ts
+│   ├── users/
+│   │   └── crud.spec.ts
+│   └── api/
+│       └── users-api.spec.ts
+├── pages/
+│   ├── LoginPage.ts
+│   └── DashboardPage.ts
+├── fixtures/
+│   └── test-data.ts
+├── playwright.config.ts
+└── global-setup.ts
+```

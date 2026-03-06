@@ -2,7 +2,7 @@
 
 ## Pipeline Validation Strategy
 
-For data pipelines (BigQuery, Firestore, Redis, PubSub):
+For data pipelines (databases, caches, message queues, file stores):
 
 ### Source-to-Target Comparison
 ```
@@ -18,17 +18,17 @@ Source Data (Input) -> Pipeline Processing -> Target Data (Output)
 1. **Completeness**: All expected records exist in target
 2. **Accuracy**: Field values match expected values (within tolerance)
 3. **Timeliness**: Data arrives within expected time window
-4. **Consistency**: Same data across different stores (Firestore + Redis + BigQuery)
+4. **Consistency**: Same data across different stores (DB + Cache + Search Index)
 5. **Uniqueness**: No duplicate records
 
 ## Numeric Comparison with Tolerance
 
 ```python
-# For financial data, never use exact equality
-def assert_price_match(actual, expected, tolerance=0.01):
-    """Compare prices with tolerance for floating point."""
+# For financial/scientific data, never use exact equality
+def assert_value_match(actual, expected, tolerance=0.01):
+    """Compare numeric values with absolute tolerance."""
     diff = abs(actual - expected)
-    assert diff <= tolerance, f"Price mismatch: {actual} vs {expected} (diff: {diff})"
+    assert diff <= tolerance, f"Value mismatch: {actual} vs {expected} (diff: {diff})"
 
 # For percentage-based tolerance
 def assert_within_percentage(actual, expected, pct=1.0):
@@ -40,59 +40,38 @@ def assert_within_percentage(actual, expected, pct=1.0):
     assert diff_pct <= pct, f"Diff {diff_pct:.2f}% exceeds {pct}% threshold"
 ```
 
-## OHLC Data Validation
-
-```python
-# Market data sanity checks
-def validate_ohlc(candle):
-    assert candle.high >= candle.low, "High must be >= Low"
-    assert candle.high >= candle.open, "High must be >= Open"
-    assert candle.high >= candle.close, "High must be >= Close"
-    assert candle.low <= candle.open, "Low must be <= Open"
-    assert candle.low <= candle.close, "Low must be <= Close"
-    assert candle.volume >= 0, "Volume must be non-negative"
-    assert candle.open > 0, "Open must be positive"
+```java
+// Java equivalent
+public static void assertWithinTolerance(double actual, double expected, double tolerance) {
+    double diff = Math.abs(actual - expected);
+    Assert.assertTrue(diff <= tolerance,
+        String.format("Value mismatch: %.4f vs %.4f (diff: %.4f)", actual, expected, diff));
+}
 ```
 
-## Cross-Source Comparison Pattern
+## Record Comparison Pattern
 
 ```python
-# Compare SMD data against multiple sources
-def compare_data_sources(smd_data, source_b_data, source_c_data, threshold):
-    mismatches = []
-    for timestamp in smd_data:
-        smd_val = smd_data[timestamp]
-        b_val = source_b_data.get(timestamp)
-        c_val = source_c_data.get(timestamp)
-
-        if b_val and abs(smd_val - b_val) > threshold:
-            mismatches.append({"timestamp": timestamp, "smd": smd_val, "source_b": b_val})
-        if c_val and abs(smd_val - c_val) > threshold:
-            mismatches.append({"timestamp": timestamp, "smd": smd_val, "source_c": c_val})
-
-    return mismatches
-```
-
-## Backtest Trade Comparison
-
-```python
-# Compare actual trades against expected
-def compare_trades(actual_trades, expected_trades):
+def compare_records(actual_records, expected_records, key_fields, compare_fields):
     """
-    Match on: variant_id + timestamp + strike
-    Compare: entry_price, exit_price, quantity, pnl, position_type
+    Generic record comparison.
+    Match on: key_fields (e.g., ['id', 'timestamp'])
+    Compare: compare_fields (e.g., ['amount', 'status', 'category'])
     """
     results = {"matched": 0, "mismatched": 0, "missing": 0, "extra": 0}
 
-    expected_map = {(t.variant_id, t.timestamp, t.strike): t for t in expected_trades}
+    expected_map = {
+        tuple(getattr(r, k) for k in key_fields): r
+        for r in expected_records
+    }
 
-    for trade in actual_trades:
-        key = (trade.variant_id, trade.timestamp, trade.strike)
+    for record in actual_records:
+        key = tuple(getattr(record, k) for k in key_fields)
         expected = expected_map.pop(key, None)
         if not expected:
             results["extra"] += 1
             continue
-        if trades_match(trade, expected):
+        if all(getattr(record, f) == getattr(expected, f) for f in compare_fields):
             results["matched"] += 1
         else:
             results["mismatched"] += 1
@@ -101,21 +80,73 @@ def compare_trades(actual_trades, expected_trades):
     return results
 ```
 
-## Signal Validation
+## Cross-Source Comparison
 
 ```python
-# Verify signal generation correctness
-def validate_signal(signal, expected):
-    assert signal["strike"] == expected["strike"], "Strike mismatch"
-    assert signal["position_type"] == expected["position_type"], "Position type mismatch"
-    assert_price_match(signal["entry_price"], expected["entry_price"])
-    assert signal["status"] in ["PENDING", "ACTIVE", "COMPLETED"]
+def compare_data_sources(primary_data, source_b_data, source_c_data, threshold):
+    """Compare a primary data source against secondary sources."""
+    mismatches = []
+    for key in primary_data:
+        primary_val = primary_data[key]
+        b_val = source_b_data.get(key)
+        c_val = source_c_data.get(key)
+
+        if b_val and abs(primary_val - b_val) > threshold:
+            mismatches.append({"key": key, "primary": primary_val, "source_b": b_val})
+        if c_val and abs(primary_val - c_val) > threshold:
+            mismatches.append({"key": key, "primary": primary_val, "source_c": c_val})
+
+    return mismatches
+```
+
+## JSON Schema Validation
+
+```python
+from jsonschema import validate, ValidationError
+
+def validate_response_schema(response_json, schema):
+    """Validate API response against JSON schema."""
+    try:
+        validate(instance=response_json, schema=schema)
+    except ValidationError as e:
+        raise AssertionError(f"Schema validation failed: {e.message}")
+
+# Example schema
+USER_SCHEMA = {
+    "type": "object",
+    "required": ["id", "email", "name", "created_at"],
+    "properties": {
+        "id": {"type": "integer"},
+        "email": {"type": "string", "format": "email"},
+        "name": {"type": "string", "minLength": 1},
+        "created_at": {"type": "string", "format": "date-time"},
+        "status": {"type": "string", "enum": ["active", "inactive", "suspended"]},
+    },
+    "additionalProperties": False,
+}
+```
+
+## Date/Time Validation
+
+```python
+from datetime import datetime, timezone
+
+def assert_timestamp_valid(timestamp_str, fmt="%Y-%m-%dT%H:%M:%SZ"):
+    """Verify a timestamp string is parseable and reasonable."""
+    parsed = datetime.strptime(timestamp_str, fmt)
+    assert parsed.year >= 2020, f"Timestamp too old: {timestamp_str}"
+    assert parsed <= datetime.now(timezone.utc).replace(tzinfo=None), f"Timestamp in future: {timestamp_str}"
+    return parsed
+
+def assert_timestamps_ordered(records, field="created_at"):
+    """Verify records are in chronological order."""
+    timestamps = [r[field] for r in records]
+    assert timestamps == sorted(timestamps), "Records not in chronological order"
 ```
 
 ## Data Freshness Tests
 
 ```python
-# Verify data is recent enough
 def assert_data_fresh(document, max_age_minutes=15):
     """Ensure data was updated within the expected time window."""
     updated_at = document.get("updated_at")
@@ -127,13 +158,11 @@ def assert_data_fresh(document, max_age_minutes=15):
 ## Allure Report Formatting for Data Tests
 
 ```python
-from src.utils.allure_formatter import STATUS_SUCCESS, STATUS_ERROR
-
 def format_comparison_table(results):
     """Generate HTML table for Allure report."""
     rows = []
     for r in results:
-        color = STATUS_SUCCESS if r["match"] else STATUS_ERROR
+        color = "#d4edda" if r["match"] else "#f8d7da"
         rows.append(f"<tr style='background:{color}'>"
                     f"<td>{r['field']}</td>"
                     f"<td>{r['expected']}</td>"
@@ -145,7 +174,7 @@ def format_comparison_table(results):
 ## Test Data Isolation
 
 - Each test generates or references unique data
-- Use timestamps or UUIDs in document IDs
-- Clean up created documents in teardown
-- Never modify production-like data in shared collections
-- Use separate test collections/buckets when possible
+- Use timestamps or UUIDs in record IDs
+- Clean up created records in teardown
+- Never modify production-like data in shared tables
+- Use separate test collections/schemas when possible

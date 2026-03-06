@@ -106,11 +106,16 @@ knowledge/
     appium-selenide.md
     pytest.md
     playwright.md
+    jest.md
+    cypress.md
   patterns/          # QA best practices and anti-patterns
     api-testing.md
     mobile-testing.md
     data-validation.md
     flaky-test-patterns.md
+    graphql-testing.md
+    websocket-testing.md
+    network-mocking.md
   standards/         # Naming, structure, and coverage rules
     test-naming.md
     test-structure.md
@@ -126,8 +131,9 @@ Installed to `~/.claude/qaforge-knowledge/` and referenced by commands at execut
 | TestNG + RestAssured | Java 17 | Maven, Allure | Full support |
 | Appium + Selenide | Java 17 | Maven, Allure | Full support |
 | pytest | Python 3.x | Allure | Full support |
-| Playwright | TypeScript/JS | npm | Supported |
-| Mocha / Jest / Cypress | JavaScript | npm | Basic support |
+| Playwright | TypeScript/JS | npm, Allure | Full support |
+| Jest | JavaScript/TS | npm, Supertest | Full support |
+| Cypress | JavaScript | npm | Full support |
 
 ## How It Works
 
@@ -139,7 +145,7 @@ Installed to `~/.claude/qaforge-knowledge/` and referenced by commands at execut
                                              |
 +----------------+    +-----------+    +-----v------+    +------------+
 | /qa:<command>  | -> | Knowledge | -> | Claude Code| -> | Generated  |
-| (slash command)|    | Base (11  |    | (reads all |    | Code/Plans |
+| (slash command)|    | Base (16  |    | (reads all |    | Code/Plans |
 |                |    |  files)   |    |  context)  |    | /Reports   |
 +----------------+    +-----------+    +-----+------+    +------------+
                                              |

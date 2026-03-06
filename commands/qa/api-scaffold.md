@@ -19,12 +19,17 @@ If no argument is provided, ask the user for:
 ## Knowledge Base
 
 **MUST READ** before generating code:
-- `~/.claude/qaforge-knowledge/frameworks/testng-restassured.md` — exact class structure, executor pattern, assertion pattern
-- `~/.claude/qaforge-knowledge/frameworks/pytest.md` — if Python project detected
+- `~/.claude/qaforge-knowledge/frameworks/testng-restassured.md` — if Java/Maven project
+- `~/.claude/qaforge-knowledge/frameworks/pytest.md` — if Python project
+- `~/.claude/qaforge-knowledge/frameworks/jest.md` — if Node.js project with Jest
+- `~/.claude/qaforge-knowledge/frameworks/playwright.md` — if Playwright project
+- `~/.claude/qaforge-knowledge/frameworks/cypress.md` — if Cypress project
 - `~/.claude/qaforge-knowledge/standards/test-naming.md` — naming conventions
 - `~/.claude/qaforge-knowledge/standards/test-structure.md` — file organization
+- `~/.claude/qaforge-knowledge/patterns/graphql-testing.md` — if GraphQL endpoint
+- `~/.claude/qaforge-knowledge/patterns/network-mocking.md` — for mocking external dependencies
 
-Also read project CLAUDE.md if it exists — it has project-specific patterns.
+Read only the files relevant to the detected framework. Also read project CLAUDE.md if it exists — it has project-specific patterns.
 
 ## Instructions
 

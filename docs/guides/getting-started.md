@@ -16,7 +16,12 @@ npx qaforge
 
 This installs:
 - 9 slash commands to `~/.claude/commands/qa/`
-- 11 knowledge files to `~/.claude/qaforge-knowledge/`
+- 16 knowledge files to `~/.claude/qaforge-knowledge/`
+
+Verify with:
+```bash
+npx qaforge --verify
+```
 
 ## Step 2: Scan Your Project
 
@@ -82,9 +87,11 @@ Scaffold commands (`/qa:api-scaffold`, `/qa:app-scaffold`) generate actual sourc
 
 ### Commands not showing up?
 
-Re-install and restart Claude Code:
+Check what's installed and reinstall if needed:
 ```bash
-npx qaforge --global
+npx qaforge --list      # See what's installed
+npx qaforge --verify    # Check for missing files
+npx qaforge --global    # Reinstall
 ```
 
 ### Output doesn't match your project patterns?
@@ -92,6 +99,19 @@ npx qaforge --global
 1. Add a `CLAUDE.md` to your project root with framework guidance
 2. Run `npx qaforge --scan` to generate project context
 3. Both files help commands understand your specific patterns
+
+### Need to start fresh?
+
+```bash
+npx qaforge --uninstall   # Remove everything
+npx qaforge               # Reinstall
+```
+
+### Need debug output?
+
+```bash
+npx qaforge --verbose --scan   # See exactly what's happening
+```
 
 ## Next Steps
 

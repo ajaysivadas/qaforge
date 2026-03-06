@@ -23,9 +23,12 @@ Before generating the plan, read the following knowledge files if they exist:
 - `~/.claude/qaforge-knowledge/patterns/api-testing.md` — API test design patterns
 - `~/.claude/qaforge-knowledge/patterns/mobile-testing.md` — mobile test patterns
 - `~/.claude/qaforge-knowledge/patterns/data-validation.md` — data pipeline patterns
+- `~/.claude/qaforge-knowledge/patterns/graphql-testing.md` — if GraphQL APIs detected
+- `~/.claude/qaforge-knowledge/patterns/websocket-testing.md` — if real-time features detected
 
-Also check for project context:
+Also read:
 - `.claude/qaforge-context.md` — auto-generated project context
+- Project `CLAUDE.md` if it exists — for project-specific patterns and dependency graphs
 
 ## Instructions
 

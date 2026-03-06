@@ -32,7 +32,7 @@ Also read project CLAUDE.md if it exists.
 
 Analyze the input for: screens involved, actions per screen, transitions, assertions needed.
 
-If a screenshot path is provided, read it to identify UI elements.
+If a screenshot path is provided, use the Read tool to view it — Claude Code can read images and identify UI elements, labels, buttons, and layout from screenshots.
 
 ### Step 2: Read Existing Framework Code
 

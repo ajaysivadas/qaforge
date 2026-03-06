@@ -22,8 +22,12 @@ Read these knowledge files before generating:
 - `~/.claude/qaforge-knowledge/standards/test-naming.md` — naming conventions
 - `~/.claude/qaforge-knowledge/standards/coverage-criteria.md` — what to cover
 - `~/.claude/qaforge-knowledge/patterns/api-testing.md` — request validation matrix
+- `~/.claude/qaforge-knowledge/patterns/mobile-testing.md` — if UI/mobile test cases needed
+- `~/.claude/qaforge-knowledge/patterns/graphql-testing.md` — if GraphQL endpoints involved
 
-Also check project context: `.claude/qaforge-context.md`
+Also read:
+- `.claude/qaforge-context.md` — auto-generated project context
+- Project `CLAUDE.md` if it exists — for project-specific patterns and conventions
 
 ## Instructions
 

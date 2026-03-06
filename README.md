@@ -62,8 +62,15 @@ npx qaforge
 ### Verify Installation
 
 ```bash
-npx qaforge --version
-npx qaforge --help
+npx qaforge --verify    # Check all files are installed correctly
+npx qaforge --list      # Show installed commands and knowledge files
+npx qaforge --version   # Show version
+```
+
+### Uninstall
+
+```bash
+npx qaforge --uninstall   # Remove from both ~/.claude/ and ./.claude/
 ```
 
 ## Commands
@@ -171,6 +178,23 @@ Installed to `~/.claude/qaforge-knowledge/` and referenced by commands at execut
 | [Knowledge Base](docs/architecture/knowledge-base.md) | How the "training" works |
 | [Contributing Guide](CONTRIBUTING.md) | How to add commands and knowledge |
 | [Changelog](CHANGELOG.md) | Version history |
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Commands don't appear in Claude Code | Run `npx qaforge --verify` to check. Reinstall with `npx qaforge --global` |
+| `npx qaforge` hangs | Check Node.js version (`node -v`, needs ≥16). Try `npx qaforge@latest` |
+| Scanner doesn't detect my framework | Ensure you run `npx qaforge --scan` from the project root (where `pom.xml`, `package.json`, etc. live) |
+| Generated code doesn't match my patterns | Add a `CLAUDE.md` to your project root with your specific conventions. QA Forge commands read it automatically |
+| Need debug output | Run with `npx qaforge --verbose` |
+
+## Limitations
+
+- **Requires Claude Code** — QA Forge is a command pack for Claude Code, not a standalone test runner
+- **Knowledge is guidance, not enforcement** — Claude uses the knowledge base as context, not strict rules. Review generated output
+- **No runtime test execution** — QA Forge generates code and plans, it doesn't execute tests
+- **Framework detection is file-based** — Scanner looks for build files (`pom.xml`, `package.json`, etc.) in the current directory only
 
 ## Contributing
 

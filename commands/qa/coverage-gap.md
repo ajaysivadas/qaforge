@@ -19,6 +19,10 @@ If no argument is provided, ask the user for:
 
 **MUST READ:**
 - `~/.claude/qaforge-knowledge/standards/coverage-criteria.md` — per-endpoint checklists, coverage levels, metrics targets
+- `~/.claude/qaforge-knowledge/patterns/api-testing.md` — request validation matrix for gap identification
+- `~/.claude/qaforge-knowledge/patterns/graphql-testing.md` — if GraphQL APIs detected
+
+Also read project `CLAUDE.md` if it exists — for project-specific endpoints, services, and architecture.
 
 ## Instructions
 
